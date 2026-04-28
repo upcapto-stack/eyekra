@@ -1,0 +1,224 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CUSTOMER
+  STAFF
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  IN_LAB
+  QC
+  READY
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  SCHEDULED
+  OUT_FOR_VISIT
+  OPTOMETRIST_REACHED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id            String      @id @default(cuid())
+  name          String
+  mobile        String      @unique
+  email         String?     @unique
+  passwordHash  String?
+  role          UserRole    @default(CUSTOMER)
+  isVerified    Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  sessions      Session[]
+  otps          OtpCode[]
+  cartItems     CartItem[]
+  addresses     UserAddress[]
+  favourites    Favourite[]
+  settings      UserSetting?
+  reviews       Review[]
+  tryonItems    TryonItem[]
+  orders        Order[]
+  bookings      Booking[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model OtpCode {
+  id         String   @id @default(cuid())
+  mobile     String
+  codeHash   String
+  purpose    String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  userId     String?
+  createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([mobile, purpose])
+}
+
+model UserAddress {
+  id          String   @id @default(cuid())
+  userId      String
+  label       String?
+  displayName String
+  flatNo      String?
+  address     String
+  contactName String?
+  contactMobile String?
+  lat         Float?
+  lng         Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model CartItem {
+  id          String   @id @default(cuid())
+  userId      String
+  productId   String
+  productName String
+  productPrice String
+  lensId      String?
+  lensName    String?
+  lensPrice   Float?
+  quantity    Int
+  lineTotal   Float
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Favourite {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  rating    Int
+  title     String?
+  body      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([productId])
+}
+
+model TryonItem {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, productId])
+}
+
+model UserSetting {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  theme     String?
+  language  String?
+  metadata  Json?
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Order {
+  id              String      @id
+  userId          String
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  status          OrderStatus @default(PENDING)
+  customerName    String
+  customerMobile  String
+  customerEmail   String
+  deliveryAddress Json
+  subtotal        Float
+  discount        Float
+  total           Float
+  offerApplied    String?
+  items           Json
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Booking {
+  id              String        @id
+  userId          String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  status          BookingStatus @default(PENDING)
+  customerName    String
+  customerMobile  String
+  customerEmail   String
+  address         String
+  deliveryAddress Json?
+  preferredDate   String
+  preferredSlotId String
+  slotLabel       String?
+  amount          Float
+  patients        Json?
+  tryonFrameIds   Json?
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model AppConfigVersion {
+  id        String   @id @default(cuid())
+  payload   Json
+  updatedBy String?
+  createdAt DateTime @default(now())
+}
+
+model UploadAsset {
+  id          String   @id @default(cuid())
+  bucket      String
+  key         String   @unique
+  url         String
+  contentType String
+  sizeBytes   Int
+  category    String
+  uploadedBy  String?
+  createdAt   DateTime @default(now())
+}

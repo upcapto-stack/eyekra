@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --brand: #fe5001;
+  --brand-light: #fe6a34;
+  --brand-dark: #e54800;
+  --background: #ffffff;
+  --foreground: #0f172a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f172a;
+    --foreground: #f8fafc;
+  }
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  min-height: 100dvh;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  min-height: 100dvh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Common button */
+.common-btn {
+  height: 48px;
+  padding: 0 24px;
+  background: #ffffff;
+  color: #111111;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  transition: all 0.25s ease;
+}
+
+.common-btn:hover {
+  box-shadow:
+    0 0 0 3px rgba(254, 80, 1, 0.15),
+    0 6px 18px rgba(254, 80, 1, 0.25);
+}
+
+.common-btn:active {
+  transform: scale(0.97);
+}
+
+.common-btn--primary {
+  background: #fe5001;
+  color: #ffffff;
+}
+
+.common-btn--primary:hover {
+  box-shadow:
+    0 0 0 3px rgba(254, 80, 1, 0.15),
+    0 6px 18px rgba(254, 80, 1, 0.25);
+}
+
+/* Safe area for notched devices (iOS/Android) */
+/* Hide scrollbar for horizontal scroll areas */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}

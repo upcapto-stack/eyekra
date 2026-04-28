@@ -1,0 +1,561 @@
+{
+  "banners": [
+    {
+      "id": "1",
+      "tag": "Eyekra Frame Fest",
+      "title": "UP TO 40% OFF",
+      "sub": "Grab big discounts on trending frames",
+      "extra": "+ Free home trial on selected styles",
+      "gradient": "from-violet-600 to-purple-700",
+      "link": "/home",
+      "showOnlyInEligibleCities": false,
+      "sortOrder": 0
+    },
+    {
+      "id": "2",
+      "tag": "New Arrivals",
+      "title": "FRESH STYLES",
+      "sub": "Latest frames just landed",
+      "extra": "Shop the new collection",
+      "gradient": "from-[#fe5001] to-[#e54800]",
+      "link": "/home",
+      "showOnlyInEligibleCities": false,
+      "sortOrder": 1,
+      "aspectRatio": "16/9"
+    },
+    {
+      "id": "3",
+      "tag": "Home Eye Test",
+      "title": "BOOK AT HOME",
+      "sub": "Free eye check-up at your doorstep",
+      "extra": "No commitment, easy booking",
+      "link": "/home-eye-test",
+      "showOnlyInEligibleCities": true,
+      "sortOrder": 2,
+      "backgroundColor": "#64f2b4",
+      "imageUrl": "/banners/1770817313380-okhp649k.png",
+      "aspectRatio": "3/2"
+    },
+    {
+      "id": "4",
+      "tag": "4hr Delivery",
+      "title": "EXPRESS DELIVERY",
+      "sub": "Get your frames in 4 hours",
+      "extra": "Available in select cities",
+      "gradient": "from-amber-500 to-orange-600",
+      "link": "/products",
+      "showOnlyInEligibleCities": true,
+      "sortOrder": 3
+    },
+    {
+      "id": "5",
+      "tag": "Blue Cut",
+      "title": "SCREEN PROTECTION",
+      "sub": "Reduce strain from screens",
+      "extra": "Up to 50% off on blue cut",
+      "gradient": "from-blue-600 to-indigo-600",
+      "link": "/home",
+      "showOnlyInEligibleCities": false,
+      "sortOrder": 4
+    },
+    {
+      "id": "6",
+      "tag": "Kids Glasses",
+      "title": "KID-FRIENDLY FRAMES",
+      "sub": "Durable, stylish & safe",
+      "extra": "Starting ₹999",
+      "gradient": "from-rose-500 to-pink-600",
+      "link": "/home",
+      "showOnlyInEligibleCities": false,
+      "sortOrder": 5,
+      "aspectRatio": "2/1"
+    }
+  ],
+  "categories": [
+    {
+      "id": "sunglasses",
+      "label": "Sunglasses",
+      "sortOrder": 1
+    },
+    {
+      "id": "reading",
+      "label": "Reading Glasses",
+      "sortOrder": 2
+    },
+    {
+      "id": "computer",
+      "label": "Computer Glasses",
+      "sortOrder": 3
+    },
+    {
+      "id": "kids",
+      "label": "Kids Glasses",
+      "sortOrder": 4
+    },
+    {
+      "id": "contact-lences",
+      "label": "contact lences",
+      "sortOrder": 5
+    },
+    {
+      "id": "eyeglasses",
+      "label": "eyeglasses",
+      "sortOrder": 5,
+      "iconUrl": "/category-icons/1771149838934-3q127qt5.webp"
+    },
+    {
+      "id": "eyeglasses-essentials",
+      "label": "essentials",
+      "sortOrder": 0,
+      "parentId": "eyeglasses"
+    }
+  ],
+  "coupons": [],
+  "offerRules": [],
+  "eligibleCities": [
+    "raipur"
+  ],
+  "updatedAt": "2026-02-15T10:04:21.023Z",
+  "collections": [
+    {
+      "id": "new-arrivals",
+      "label": "New Arrivals",
+      "sortOrder": 0,
+      "badge": "New"
+    }
+  ],
+  "products": [
+    {
+      "id": "1",
+      "name": "Classic Aviator",
+      "brand": "Eyekra",
+      "price": "₹2,499",
+      "originalPrice": "₹3,499",
+      "discount": "30% off",
+      "category": "sunglasses",
+      "shape": "aviator",
+      "newArrival": true,
+      "topSeller": true,
+      "rating": 4.2,
+      "reviewCount": 128
+    },
+    {
+      "id": "2",
+      "name": "Round Metal",
+      "brand": "Eyekra",
+      "price": "₹1,899",
+      "originalPrice": "₹2,299",
+      "discount": "17% off",
+      "category": "eyeglasses",
+      "shape": "round",
+      "newArrival": true,
+      "topSeller": true,
+      "rating": 4.5,
+      "reviewCount": 89,
+      "material": "Metal",
+      "frameType": "Full Frame",
+      "lensWidth": "52 mm",
+      "noseBridge": "16 mm",
+      "templeLength": "145 mm",
+      "description": "Lightweight round metal frames for everyday wear. Classic design with a modern fit.",
+      "colors": [
+        {
+          "name": "Black",
+          "hex": "#1a1a1a"
+        },
+        {
+          "name": "Silver",
+          "hex": "#c0c0c0"
+        },
+        {
+          "name": "Gold",
+          "hex": "#d4af37"
+        },
+        {
+          "name": "Gunmetal",
+          "hex": "#2c3539"
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "Wayfarer Pro",
+      "brand": "Eyekra",
+      "price": "₹2,199",
+      "originalPrice": "₹3,299",
+      "discount": "40% off",
+      "category": "sunglasses",
+      "shape": "wayfarer",
+      "topSeller": true,
+      "rating": 4,
+      "reviewCount": 256
+    },
+    {
+      "id": "4",
+      "name": "Cat-Eye Elegance",
+      "brand": "Eyekra",
+      "price": "₹1,699",
+      "category": "eyeglasses",
+      "shape": "cat-eye",
+      "newArrival": true,
+      "rating": 4.3,
+      "reviewCount": 67
+    },
+    {
+      "id": "5",
+      "name": "Rectangle Slim",
+      "brand": "Eyekra",
+      "price": "₹1,999",
+      "category": "eyeglasses",
+      "shape": "rectangle",
+      "topSeller": true,
+      "rating": 4.1,
+      "reviewCount": 43
+    },
+    {
+      "id": "6",
+      "name": "Oval Vintage",
+      "brand": "Eyekra",
+      "price": "₹2,299",
+      "category": "eyeglasses",
+      "shape": "oval",
+      "rating": 4.4,
+      "reviewCount": 112
+    },
+    {
+      "id": "7",
+      "name": "Square Edge",
+      "brand": "Eyekra",
+      "price": "₹1,799",
+      "category": "eyeglasses",
+      "shape": "square",
+      "rating": 3.9,
+      "reviewCount": 34
+    },
+    {
+      "id": "8",
+      "name": "Blue Cut Pro",
+      "brand": "Eyekra",
+      "price": "₹2,499",
+      "category": "computer",
+      "shape": "rectangle",
+      "newArrival": true,
+      "rating": 4.6,
+      "reviewCount": 201
+    },
+    {
+      "id": "9",
+      "name": "Reading Classic",
+      "brand": "Eyekra",
+      "price": "₹999",
+      "category": "reading",
+      "shape": "oval",
+      "rating": 4.2,
+      "reviewCount": 89
+    },
+    {
+      "id": "10",
+      "name": "Kids Fun Frame",
+      "brand": "Eyekra",
+      "price": "₹1,299",
+      "category": "kids",
+      "shape": "round",
+      "rating": 4.7,
+      "reviewCount": 56
+    },
+    {
+      "id": "11",
+      "name": "Clubmaster Style",
+      "brand": "Eyekra",
+      "price": "₹2,699",
+      "category": "sunglasses",
+      "shape": "clubmaster",
+      "rating": 4,
+      "reviewCount": 78
+    },
+    {
+      "id": "12",
+      "name": "Geometric Bold",
+      "brand": "Eyekra",
+      "price": "₹2,099",
+      "category": "eyeglasses",
+      "shape": "geometric",
+      "newArrival": true,
+      "rating": 4.3,
+      "reviewCount": 45
+    },
+    {
+      "id": "13",
+      "name": "Pilot Aviator",
+      "brand": "Eyekra",
+      "price": "₹2,399",
+      "category": "sunglasses",
+      "shape": "aviator",
+      "rating": 4.1,
+      "reviewCount": 92
+    },
+    {
+      "id": "14",
+      "name": "Reader Comfort",
+      "brand": "Eyekra",
+      "price": "₹1,199",
+      "category": "reading",
+      "shape": "rectangle",
+      "rating": 4.4,
+      "reviewCount": 134
+    },
+    {
+      "id": "15",
+      "name": "Screen Guard",
+      "brand": "Eyekra",
+      "price": "₹1,899",
+      "category": "computer",
+      "shape": "wayfarer",
+      "rating": 4.5,
+      "reviewCount": 167
+    },
+    {
+      "id": "16",
+      "name": "Kids Aviator",
+      "brand": "Eyekra",
+      "price": "₹999",
+      "category": "kids",
+      "shape": "aviator",
+      "rating": 4.8,
+      "reviewCount": 41
+    }
+  ],
+  "lenses": [
+    {
+      "id": "single-vision",
+      "name": "Single Vision",
+      "shortDesc": "Clear vision at one distance",
+      "description": "Standard lenses with one power for either near or distance. One prescription for your main activity.",
+      "whoIsItFor": "Best for: First-time glass wearers, anyone with one power for daily use (distance OR near). Ideal if you use the same power for most of the day.",
+      "price": 999,
+      "lensTypeCategory": "single_vision",
+      "useCases": [
+        "all"
+      ],
+      "type": "single_vision",
+      "badge": "Popular"
+    },
+    {
+      "id": "blue-cut",
+      "name": "Blue Cut",
+      "shortDesc": "Reduce screen strain & blue light",
+      "description": "Special coating that filters harmful blue light from screens. Reduces eye strain, dryness and sleep disruption from devices.",
+      "whoIsItFor": "Best for: Office workers, students, WFH professionals, gamers — anyone on laptop/phone/tablet for 4+ hours a day. Also good if you feel tired or dry eyes after screen time.",
+      "price": 1499,
+      "lensTypeCategory": "single_vision",
+      "useCases": [
+        "computer",
+        "all"
+      ],
+      "blueCut": true,
+      "type": "blue_cut",
+      "badge": "Recommended"
+    },
+    {
+      "id": "reading",
+      "name": "Reading Lenses",
+      "shortDesc": "Comfortable for books & close work",
+      "description": "Optimised for near vision: books, mobile, fine print, crafting, and close-up work. Reduces strain when focusing at arm’s length.",
+      "whoIsItFor": "Best for: People 40+ who need help with small text (presbyopia), or anyone who reads/crafts a lot and gets headaches or tired eyes. Perfect for desk work and reading.",
+      "price": 1299,
+      "lensTypeCategory": "single_vision",
+      "useCases": [
+        "reading",
+        "all"
+      ],
+      "type": "single_vision"
+    },
+    {
+      "id": "bifocal",
+      "name": "Bifocal",
+      "shortDesc": "Two powers in one lens",
+      "description": "Upper zone for distance (driving, TV), lower zone for near (reading, phone). Clear line between the two; no need to switch glasses.",
+      "whoIsItFor": "Best for: People who need both distance and reading power. You look up for far and down for near. Classic option; some prefer the visible line so they know which zone they’re using.",
+      "price": 2499,
+      "lensTypeCategory": "bifocal_progressive",
+      "useCases": [
+        "reading",
+        "driving",
+        "all"
+      ],
+      "type": "bifocal"
+    },
+    {
+      "id": "progressive",
+      "name": "Progressive (No-Line)",
+      "shortDesc": "Smooth transition, no visible line",
+      "description": "One lens with smooth transition from distance (top) to intermediate (middle) to near (bottom). No bifocal line; looks like a regular lens.",
+      "whoIsItFor": "Best for: Anyone who needs distance + reading but doesn’t want the visible line of bifocals. Great for driving, computer and reading without changing glasses. Premium, seamless option.",
+      "price": 3999,
+      "lensTypeCategory": "bifocal_progressive",
+      "useCases": [
+        "reading",
+        "driving",
+        "all"
+      ],
+      "type": "progressive"
+    },
+    {
+      "id": "non-prescription",
+      "name": "Zero Power (Non-prescription)",
+      "shortDesc": "Block harmful rays, no power",
+      "description": "Zero power lenses with anti-glare and blue-cut options. Block 98% of harmful blue light without vision correction.",
+      "whoIsItFor": "Best for: People who don’t need power — fashion use, or blue-cut only for screen protection. Also for spare/backup frames or when your doctor said no correction needed.",
+      "price": 499,
+      "lensTypeCategory": "zero_power",
+      "useCases": [
+        "all",
+        "computer"
+      ],
+      "blueCut": true,
+      "type": "non_prescription"
+    },
+    {
+      "id": "frame-only",
+      "name": "Frame Only",
+      "shortDesc": "No lens – frame only",
+      "description": "Buy only the frame. No lens included; you can add lenses later or use elsewhere.",
+      "whoIsItFor": "Best for: When you only want the frame — to use with your own lenses, or to get lenses fitted elsewhere.",
+      "price": 0,
+      "lensTypeCategory": "frame_only",
+      "useCases": [
+        "all"
+      ],
+      "type": "non_prescription"
+    }
+  ],
+  "attributes": [
+    {
+      "key": "category",
+      "label": "Category",
+      "description": "Primary grouping. Used in Structure layer and filters.",
+      "type": "select",
+      "options": [
+        {
+          "id": "eyeglasses",
+          "label": "Eyeglasses"
+        },
+        {
+          "id": "sunglasses",
+          "label": "Sunglasses"
+        },
+        {
+          "id": "reading",
+          "label": "Reading Glasses"
+        },
+        {
+          "id": "computer",
+          "label": "Computer Glasses"
+        },
+        {
+          "id": "kids",
+          "label": "Kids Glasses"
+        }
+      ]
+    },
+    {
+      "key": "shape",
+      "label": "Frame shape",
+      "description": "Filter and collection condition.",
+      "type": "select",
+      "options": [
+        {
+          "id": "round",
+          "label": "Round"
+        },
+        {
+          "id": "oval",
+          "label": "Oval"
+        },
+        {
+          "id": "square",
+          "label": "Square"
+        },
+        {
+          "id": "rectangle",
+          "label": "Rectangle"
+        },
+        {
+          "id": "aviator",
+          "label": "Aviator"
+        },
+        {
+          "id": "cat-eye",
+          "label": "Cat-Eye"
+        },
+        {
+          "id": "wayfarer",
+          "label": "Wayfarer"
+        },
+        {
+          "id": "geometric",
+          "label": "Geometric"
+        },
+        {
+          "id": "clubmaster",
+          "label": "Clubmaster"
+        }
+      ]
+    },
+    {
+      "key": "brand",
+      "label": "Brand",
+      "description": "Filter and SEO.",
+      "example": "Eyekra",
+      "type": "text"
+    },
+    {
+      "key": "frameType",
+      "label": "Frame type",
+      "description": "e.g. Full Frame, Half Frame.",
+      "example": "Full Frame",
+      "type": "text"
+    },
+    {
+      "key": "material",
+      "label": "Material",
+      "description": "Product detail and filter.",
+      "example": "Metal, Acetate",
+      "type": "text"
+    },
+    {
+      "key": "newArrival",
+      "label": "New arrival",
+      "description": "Boolean. Powers “New Arrivals” collection and filters.",
+      "type": "boolean"
+    },
+    {
+      "key": "topSeller",
+      "label": "Top seller",
+      "description": "Boolean. Powers “Top Sellers” collection and filters.",
+      "type": "boolean"
+    },
+    {
+      "key": "price",
+      "label": "Price",
+      "description": "Numeric (parsed from string). Range conditions in rule-based collections.",
+      "example": "₹2,499",
+      "type": "text"
+    }
+  ],
+  "tags": [
+    {
+      "id": "new",
+      "label": "New"
+    },
+    {
+      "id": "bestseller",
+      "label": "Bestseller"
+    },
+    {
+      "id": "popular",
+      "label": "Popular"
+    }
+  ],
+  "stats": {}
+}
