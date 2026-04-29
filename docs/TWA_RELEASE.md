@@ -25,7 +25,7 @@ export TWA_MANIFEST_URL="https://your-domain.vercel.app/manifest.webmanifest"
 npm run twa:init
 ```
 
-This creates `twa-manifest.json` and Android wrapper files.
+Run this from an **empty** project directory (for a new wrapper), or follow Bubblewrap prompts. This repo already ships **`twa-android/`**; day-to-day you usually only need **`npm run twa:build`**.
 
 Use (this repo’s shipped values):
 
@@ -49,7 +49,7 @@ From the **repository root** (where `package.json` lives):
 npm run twa:build
 ```
 
-Bubblewrap uses your `twa-android/twa-manifest.json` signing config and writes **release** artifacts next to the Android project:
+Runs Bubblewrap **from `twa-android/`** (same as `twa:init`). It uses `twa-android/twa-manifest.json` for signing and writes **release** artifacts next to that project:
 
 | Artifact | Typical path (after a successful build) |
 |----------|----------------------------------------|

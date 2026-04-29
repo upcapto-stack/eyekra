@@ -28,6 +28,7 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run vercel-build` | Vercel build with Prisma migrate deploy |
 | `npm run start` | Run production build |
 | `npm run lint`  | Run ESLint         |
+| `npm run twa:build` | Bubblewrap signed release build inside `twa-android/` (JDK + Android SDK required) |
 
 ## Routes
 

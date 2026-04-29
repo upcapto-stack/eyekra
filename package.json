@@ -10,7 +10,7 @@
     "lint": "next lint",
     "test:smoke": "node --test tests/**/*.test.mjs",
     "twa:init": "npx @bubblewrap/cli init --manifest=$TWA_MANIFEST_URL",
-    "twa:build": "npx @bubblewrap/cli build",
+    "twa:build": "cd twa-android && npx @bubblewrap/cli build",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
