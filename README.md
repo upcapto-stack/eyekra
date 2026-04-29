@@ -28,7 +28,9 @@ Open [http://localhost:3000](http://localhost:3000).
 | `npm run vercel-build` | Vercel build with Prisma migrate deploy |
 | `npm run start` | Run production build |
 | `npm run lint`  | Run ESLint         |
-| `npm run twa:build` | Bubblewrap signed release build inside `twa-android/` (JDK + Android SDK required) |
+| `npm run twa:update` | Sync `twa-manifest.json` → Android project (run after manifest edits) |
+| `npm run twa:build` | Signed release build (needs JDK, Android SDK, keystore passwords or `BUBBLEWRAP_*` env vars) |
+| `npm run twa:build:unsigned` | Same build pipeline without signing (local smoke test only) |
 
 ## Routes
 

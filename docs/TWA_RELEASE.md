@@ -51,6 +51,10 @@ npm run twa:build
 
 Runs Bubblewrap **from `twa-android/`** (same as `twa:init`). It uses `twa-android/twa-manifest.json` for signing and writes **release** artifacts next to that project:
 
+**Before `twa:build`:** if you edited `twa-manifest.json`, run **`npm run twa:update`** first so Gradle/Android files match the manifest (avoids the interactive “apply changes?” prompt). `update` may bump `appVersionCode` / `appVersionName`.
+
+**Keystore passwords:** a normal signed build prompts for the keystore password. For automation, set **`BUBBLEWRAP_KEYSTORE_PASSWORD`** and **`BUBBLEWRAP_KEY_PASSWORD`** in the environment, then run `npm run twa:build`. For a local test APK/AAB without signing, use **`npm run twa:build:unsigned`** (outputs are not Play-upload signed builds).
+
 | Artifact | Typical path (after a successful build) |
 |----------|----------------------------------------|
 | Signed APK (install on phone) | `twa-android/app-release-signed.apk` |
