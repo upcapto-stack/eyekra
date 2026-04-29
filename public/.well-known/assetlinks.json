@@ -3,9 +3,9 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "com.eyekra.app",
+      "package_name": "com.upcapto.eyekra",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_RELEASE_KEY_SHA256_FINGERPRINT"
+        "77:87:C5:25:EF:A6:9F:F1:BE:2A:95:9D:BB:34:D0:56:F6:03:D3:7B:76:CC:7C:DF:36:FE:43:38:EB:12:CA:0F"
       ]
     }
   }

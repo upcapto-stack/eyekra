@@ -11,6 +11,9 @@ Set these in `Vercel Project -> Settings -> Environment Variables`:
 - `AUTH_SECRET` (long random secret)
 - `GOOGLE_CLIENT_ID`
 - `GOOGLE_CLIENT_SECRET`
+- `HEALTH_CHECK_SECRET` (optional; separate from `AUTH_SECRET`; required for `GET /api/health/admin-bootstrap` with header `x-health-key`)
+
+Admin accounts are created only via `prisma db seed` (or your controlled migration tooling), not on first password login.
 
 Do not expose secrets through `NEXT_PUBLIC_*` variables.
 

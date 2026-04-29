@@ -15,6 +15,32 @@ build
 .env.development.local
 .env.test.local
 .env.production.local
+.env.vercel
+
+# TWA signing material (never commit)
+twa-android/android.keystore
+twa-android/*.jks
+
+# TWA Gradle build outputs (CI or local rebuild)
+twa-android/build/
+twa-android/app/build/
+twa-android/app-release-signed.apk
+twa-android/app-release-bundle.aab
+twa-android/app-release-signed.apk.idsig
+twa-android/app-release-unsigned-aligned.apk
+twa-android/.gradle/
+
+# Bubblewrap sometimes writes Android project files at repo root — ignore if recreated
+/app/
+/build.gradle
+/settings.gradle
+/gradle.properties
+/gradlew
+/gradlew.bat
+/gradle/
+/manifest-checksum.txt
+/store_icon.png
+/assetlinks.json
 
 # debug
 npm-debug.log*

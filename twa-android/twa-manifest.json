@@ -1,0 +1,52 @@
+{
+  "packageId": "com.upcapto.eyekra",
+  "host": "eyekra.vercel.app",
+  "name": "eyekra",
+  "launcherName": "eyekra",
+  "display": "standalone",
+  "themeColor": "#FE5001",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#FFFFFF",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://eyekra.vercel.app/icons/icon-512.svg",
+  "maskableIconUrl": "https://eyekra.vercel.app/icons/icon-512.svg",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "/Users/yuvrajsingh/app eyekra/twa-android/android.keystore",
+    "alias": "android"
+  },
+  "appVersionName": "3",
+  "appVersionCode": 3,
+  "shortcuts": [],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://eyekra.vercel.app/manifest.webmanifest",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://eyekra.vercel.app/",
+  "minSdkVersion": 21,
+  "orientation": "portrait-primary",
+  "fingerprints": [
+    {
+      "name": "release-key",
+      "value": "77:87:C5:25:EF:A6:9F:F1:BE:2A:95:9D:BB:34:D0:56:F6:03:D3:7B:76:CC:7C:DF:36:FE:43:38:EB:12:CA:0F"
+    }
+  ],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "3"
+}
