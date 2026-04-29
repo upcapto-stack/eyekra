@@ -17,11 +17,11 @@
   "maskableIconUrl": "https://eyekra.vercel.app/icons/icon-512.png",
   "splashScreenFadeOutDuration": 300,
   "signingKey": {
-    "path": "/Users/yuvrajsingh/app eyekra/twa-android/android.keystore",
-    "alias": "android"
+    "path": "/Users/yuvrajsingh/app eyekra/twa-android/android-upload-key.jks",
+    "alias": "upload"
   },
-  "appVersionName": "3",
-  "appVersionCode": 3,
+  "appVersionName": "5",
+  "appVersionCode": 5,
   "shortcuts": [],
   "generatorApp": "bubblewrap-cli",
   "webManifestUrl": "https://eyekra.vercel.app/manifest.webmanifest",
@@ -39,7 +39,7 @@
   "fingerprints": [
     {
       "name": "release-key",
-      "value": "77:87:C5:25:EF:A6:9F:F1:BE:2A:95:9D:BB:34:D0:56:F6:03:D3:7B:76:CC:7C:DF:36:FE:43:38:EB:12:CA:0F"
+      "value": "C2:7D:A3:F3:A4:E3:60:AD:03:F3:04:6A:E8:E1:79:08:27:31:B9:D3:6B:9F:87:B0:9B:C7:9F:F9:A9:65:43:1B"
     }
   ],
   "additionalTrustedOrigins": [],
@@ -48,5 +48,5 @@
   "fileHandlers": [],
   "launchHandlerClientMode": "",
   "displayOverride": [],
-  "appVersion": "3"
+  "appVersion": "5"
 }
