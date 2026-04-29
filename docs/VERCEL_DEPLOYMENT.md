@@ -13,6 +13,11 @@ Set these in `Vercel Project -> Settings -> Environment Variables`:
 - `GOOGLE_CLIENT_SECRET`
 - `HEALTH_CHECK_SECRET` (optional; separate from `AUTH_SECRET`; required for `GET /api/health/admin-bootstrap` with header `x-health-key`)
 
+**Health endpoints**
+
+- `GET` or `HEAD /api/health` — public liveness (no secrets). Use for uptime checks and load balancers.
+- `GET /api/health/admin-bootstrap` — internal diagnostics; returns `404` unless `HEALTH_CHECK_SECRET` is set; then requires header `x-health-key` matching that secret. Prefer **staging only** or restrict by network policy if you enable it in production.
+
 Admin accounts are created only via `prisma db seed` (or your controlled migration tooling), not on first password login.
 
 Do not expose secrets through `NEXT_PUBLIC_*` variables.
