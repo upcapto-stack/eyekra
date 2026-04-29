@@ -87,7 +87,7 @@ export function SettingsView() {
                   setTheme(opt.value);
                   setSettingsState((s) => ({ ...s, theme: opt.value }));
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`inline-flex items-center justify-center text-center min-h-[2.5rem] px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   settings.theme === opt.value
                     ? 'bg-[#c93f00] text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -112,7 +112,7 @@ export function SettingsView() {
                   setLanguage(opt.value);
                   setSettingsState((s) => ({ ...s, language: opt.value }));
                 }}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`inline-flex items-center justify-center text-center min-h-[2.5rem] px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   settings.language === opt.value
                     ? 'bg-[#c93f00] text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'

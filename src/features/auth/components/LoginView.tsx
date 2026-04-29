@@ -16,8 +16,7 @@ export function LoginView() {
           alt="eyekra"
           width={120}
           height={120}
-          className="object-contain w-auto h-auto"
-          style={{ width: 'auto', height: 'auto' }}
+          className="object-contain w-[120px] h-[120px]"
         />
       </header>
 
@@ -49,7 +48,7 @@ export function LoginView() {
           >
             Log in
           </button>
-          <Link href="/signup" className="common-btn common-btn--primary w-full text-center inline-flex items-center justify-center">
+          <Link href="/signup" className="common-btn common-btn--primary w-full">
             Sign Up
           </Link>
         </div>

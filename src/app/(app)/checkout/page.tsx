@@ -307,7 +307,7 @@ export default function CheckoutPage() {
                     placeholder="Offer code"
                     className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm uppercase"
                   />
-                  <button type="button" onClick={handleApplyCode} className="px-4 py-2 rounded-lg bg-[#fe5001] text-white text-sm font-medium whitespace-nowrap">
+                  <button type="button" onClick={handleApplyCode} className="inline-flex items-center justify-center text-center px-4 py-2 rounded-lg bg-[#fe5001] text-white text-sm font-medium whitespace-nowrap">
                     Apply
                   </button>
                 </div>

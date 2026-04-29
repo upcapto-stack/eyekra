@@ -56,14 +56,14 @@ export function WelcomeView({ onContinueToHome }: WelcomeViewProps) {
           <button
             type="button"
             onClick={markWelcomeSeen}
-            className="rounded-xl bg-white text-brand font-semibold py-3.5 text-center border-2 border-brand hover:bg-orange-50 transition-colors"
+            className="w-full flex items-center justify-center rounded-xl bg-white text-brand font-semibold py-3.5 text-center border-2 border-brand hover:bg-orange-50 transition-colors"
           >
             Log in
           </button>
           <button
             type="button"
             onClick={markWelcomeSeen}
-            className="rounded-xl bg-brand text-white font-semibold py-3.5 text-center hover:bg-brand-dark transition-colors"
+            className="w-full flex items-center justify-center rounded-xl bg-brand text-white font-semibold py-3.5 text-center hover:bg-brand-dark transition-colors"
           >
             Sign Up
           </button>
@@ -75,7 +75,7 @@ export function WelcomeView({ onContinueToHome }: WelcomeViewProps) {
               markWelcomeSeen();
               onContinueToHome();
             }}
-            className="w-full text-slate-600 dark:text-slate-500 text-sm font-medium py-2"
+            className="w-full flex items-center justify-center text-slate-600 dark:text-slate-500 text-sm font-medium py-2 text-center"
           >
             Continue without account
           </button>

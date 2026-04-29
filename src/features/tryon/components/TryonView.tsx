@@ -72,7 +72,7 @@ export function TryonView() {
             </svg>
             <p className="text-slate-600 dark:text-slate-400 text-sm">No frames added yet</p>
             <p className="text-slate-500 dark:text-slate-500 text-xs mt-1">Add frames from product pages to try at home</p>
-            <Link href="/products" className="inline-block mt-4 common-btn common-btn--primary">
+            <Link href="/products" className="mt-4 inline-flex common-btn common-btn--primary">
               Browse frames
             </Link>
           </div>

@@ -192,7 +192,7 @@ export function CartView() {
               <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
             </svg>
             <p className="text-slate-600 dark:text-slate-400 text-sm">Your cart is empty</p>
-            <Link href="/products" className="inline-block mt-4 common-btn common-btn--primary">
+            <Link href="/products" className="mt-4 inline-flex common-btn common-btn--primary">
               Browse frames
             </Link>
           </div>
@@ -260,7 +260,7 @@ export function CartView() {
                     placeholder="Offer code"
                     className="flex-1 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-3 py-2 text-sm uppercase"
                   />
-                  <button type="button" onClick={handleApplyCode} className="px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 text-sm font-medium">
+                  <button type="button" onClick={handleApplyCode} className="inline-flex items-center justify-center text-center px-4 py-2 rounded-lg bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-200 text-sm font-medium">
                     Apply
                   </button>
                 </div>
