@@ -1,6 +1,6 @@
 # Capacitor Phase-2 Roadmap
 
-Use this after TWA release when native features are required.
+TWA for Eyekra is **done** in `twa-android/`. Use this document only when you need **native capabilities beyond TWA** (plugins, background services, heavy offline native code).
 
 ## Target Outcome
 
@@ -13,7 +13,7 @@ incrementally through Capacitor.
    - `npm i @capacitor/core`
    - `npm i -D @capacitor/cli`
 2. Initialize project:
-   - `npx cap init eyekra com.eyekra.app`
+   - `npx cap init eyekra com.upcapto.eyekra` (align package id with Play / TWA)
 3. Prefer hosted URL mode initially (lowest risk):
    - point Android shell to production web URL
 

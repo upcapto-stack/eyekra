@@ -1,0 +1,41 @@
+# Copy this file to: .github/workflows/android-twa.yml
+# Compiles TWA debug APK on CI (no keystore). Release AAB stays local or a secured signing job.
+name: Android TWA CI
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'twa-android/**'
+      - '.github/workflows/android-twa.yml'
+  pull_request:
+    paths:
+      - 'twa-android/**'
+      - '.github/workflows/android-twa.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: android-twa-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  assemble-debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+          cache: gradle
+          cache-dependency-path: |
+            twa-android/*.gradle*
+            twa-android/app/*.gradle*
+
+      - uses: android-actions/setup-android@v4
+
+      - name: Assemble debug
+        working-directory: twa-android
+        run: chmod +x gradlew && ./gradlew :app:assembleDebug --no-daemon --stacktrace
