@@ -43,18 +43,43 @@ Re-deploy web app after updating this file.
 
 ## 4) Build Android App
 
+From the **repository root** (where `package.json` lives):
+
 ```bash
 npm run twa:build
 ```
 
-Output includes signed artifacts for internal testing.
+Bubblewrap uses your `twa-android/twa-manifest.json` signing config and writes **release** artifacts next to the Android project:
+
+| Artifact | Typical path (after a successful build) |
+|----------|----------------------------------------|
+| Signed APK (install on phone) | `twa-android/app-release-signed.apk` |
+| Play-style bundle | `twa-android/app-release-bundle.aab` |
+
+Those paths are under **`twa-android/`** at the **same level** as `twa-manifest.json` and `gradlew`. They are **not** committed to git (see `.gitignore`); you only see them **on your machine after you build**.
+
+**If you do not have an APK yet:** you must run the command above on a Mac/PC with **JDK 17+** and **Android SDK** (`ANDROID_HOME`) set up. If `npm run twa:build` fails, you can still sanity-check the wrapper with a **debug** APK from Gradle (unsigned release path; fine for dev smoke test):
+
+```bash
+cd twa-android && ./gradlew :app:assembleDebug
+```
+
+Debug APK path: **`twa-android/app/build/outputs/apk/debug/app-debug.apk`** (exists until you `clean`).
+
+### Install the APK on your phone
+
+1. Copy `app-release-signed.apk` or `app-debug.apk` to the device (USB, AirDrop, Drive, etc.).
+2. On the phone: open the file → allow “Install unknown apps” for that source if Android asks.
+3. Or with USB debugging: `adb install -r twa-android/app-release-signed.apk` (path from repo root).
 
 ## 5) TWA Validation Checklist
 
-- Open app and verify it loads production domain.
-- Confirm login/session continuity.
-- Confirm deep-link navigation and Android back behavior.
-- Confirm Google auth callback returns to app correctly.
+Do these **on a real Android device** after installing the APK (or AAB via an internal Play track):
+
+1. **Production domain** — Launch **eyekra** from the home screen; the in-app web content should be served from your real host (e.g. `eyekra.vercel.app`), not localhost.
+2. **Login / session** — Sign in with password or OTP (and Google if you use it); close the app fully and reopen; you should still be logged in where your product expects it.
+3. **Navigation** — Open a few screens, use the **system Back** button; you should not get stuck on a blank screen or kicked to the browser in a broken state (TWA should stay in the app shell).
+4. **Google auth** — Start Google sign-in from the TWA; after choosing an account, you should return **into the app** (same task), not stranded in an external browser tab, and the session should match your `APP_BASE_URL` / OAuth redirect configuration.
 
 ## 6) Google Play — first submission (store ops)
 
