@@ -52,5 +52,5 @@ Open [http://localhost:3000](http://localhost:3000).
 ## Deployment
 
 - Vercel deployment checklist: `docs/VERCEL_DEPLOYMENT.md`
-- TWA release steps: `docs/TWA_RELEASE.md`
+- TWA (Android wrapper): **done** — project in `twa-android/`; steps and checklist: `docs/TWA_RELEASE.md`
 - Capacitor phase-2 plan: `docs/CAPACITOR_ROADMAP.md`

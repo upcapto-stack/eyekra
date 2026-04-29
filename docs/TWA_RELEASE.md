@@ -2,6 +2,8 @@
 
 This guide packages the deployed web app into Android using Bubblewrap.
 
+**Status:** TWA for this product is **complete** — Bubblewrap project lives in `twa-android/` (host `eyekra.vercel.app`, package `com.upcapto.eyekra`), Digital Asset Links are served from `public/.well-known/assetlinks.json`, and release builds are produced locally from that folder. Remaining work is **store ops** (Play Console listing, signing policy in CI, staged rollouts), not wrapper setup.
+
 ## Prerequisites
 
 - Deployed HTTPS app URL (for example `https://your-domain.vercel.app`)
@@ -25,10 +27,11 @@ npm run twa:init
 
 This creates `twa-manifest.json` and Android wrapper files.
 
-Use:
-- package id: `com.eyekra.app`
+Use (this repo’s shipped values):
+
+- package id: `com.upcapto.eyekra`
 - launcher name: `eyekra`
-- host: your production domain
+- host: production origin (e.g. `eyekra.vercel.app`)
 
 ## 3) Configure Digital Asset Links
 
