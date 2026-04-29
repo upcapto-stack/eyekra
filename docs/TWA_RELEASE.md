@@ -72,6 +72,21 @@ Debug APK path: **`twa-android/app/build/outputs/apk/debug/app-debug.apk`** (exi
 2. On the phone: open the file → allow “Install unknown apps” for that source if Android asks.
 3. Or with USB debugging: `adb install -r twa-android/app-release-signed.apk` (path from repo root).
 
+### After you change icons or `manifest.webmanifest`
+
+**Web / PWA (Add to Home Screen, Chrome install)**
+
+1. Deploy the site so **`/manifest.webmanifest`** and **`/icons/icon-*.png`** on the server match your local changes.
+2. On the phone, the old shortcut often **caches** the previous icon. Either remove the shortcut from the home screen, then open the site in the browser and add again — or in Chrome use **Site settings → Storage → Clear data** (or “Reset permissions”) for your origin, then revisit and **Install app** / **Add to Home Screen** again.
+
+**Android TWA (APK / Play internal track)**
+
+Launcher bitmaps live in **`twa-android/app/src/main/res/mipmap-*`**. Installing a build made **before** those files changed will still show the old icon.
+
+1. From repo root: **`npm run twa:build`** (or your signed Gradle release pipeline).
+2. Install the new **`twa-android/app-release-signed.apk`**, or upload a new **`app-release-bundle.aab`** to Play (bump **`versionCode`** in `twa-android/app/build.gradle` / `twa-manifest.json` when Play requires it).
+3. Uninstall the old app first if Android refuses an in-place downgrade; otherwise `adb install -r` overwrites for sideload.
+
 ## 5) TWA Validation Checklist
 
 Do these **on a real Android device** after installing the APK (or AAB via an internal Play track):
