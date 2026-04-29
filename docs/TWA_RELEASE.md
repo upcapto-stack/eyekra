@@ -81,6 +81,16 @@ Do these **on a real Android device** after installing the APK (or AAB via an in
 3. **Navigation** — Open a few screens, use the **system Back** button; you should not get stuck on a blank screen or kicked to the browser in a broken state (TWA should stay in the app shell).
 4. **Google auth** — Start Google sign-in from the TWA; after choosing an account, you should return **into the app** (same task), not stranded in an external browser tab, and the session should match your `APP_BASE_URL` / OAuth redirect configuration.
 
+### Troubleshooting: TWA opens but shows a Next.js “404” page
+
+The wrapper loads **`https://<your-host>/`** (see `launchUrl` / `hostName` in the Android project). If that URL returns **Next’s built-in 404** in a normal browser too, the problem is the **web deployment**, not the APK.
+
+1. On a desktop browser, open the same URL the TWA uses (e.g. `https://eyekra.vercel.app/`).
+2. Optional: `curl -sI https://eyekra.vercel.app/ | grep x-matched-path` — you want **`x-matched-path: /`**, not **`/404`**.
+3. **Fix:** trigger a fresh **production** deploy from the current repo (`vercel deploy --prod` or push to the branch Vercel builds). Stale deploys sometimes appear after bad builds (e.g. accidental **root-level** `app/` folder next to `src/app`, which confuses Next.js). Keep Android Bubblewrap output under **`twa-android/`** only.
+
+After production serves `/` correctly, force-close the Android app and open it again (no need to rebuild the AAB for a pure web fix).
+
 ## 6) Google Play — first submission (store ops)
 
 1. **Play Console** — Create the app, pick default language, short/full description, graphics (feature graphic, screenshots, hi-res icon).
