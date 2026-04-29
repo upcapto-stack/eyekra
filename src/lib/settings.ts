@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'eyekra-settings';
+const SESSION_HINT_KEY = 'eyekra-session-hint';
 let settingsHydrated = false;
 
 export type ThemeMode = 'light' | 'dark' | 'system';
@@ -45,6 +46,7 @@ function setStored(settings: AppSettings): void {
 }
 
 async function hydrateSettingsFromServer(): Promise<void> {
+  if (typeof window !== 'undefined' && !localStorage.getItem(SESSION_HINT_KEY)) return;
   try {
     const res = await fetch('/api/user/settings', { credentials: 'include' });
     if (!res.ok) return;
@@ -64,6 +66,7 @@ async function hydrateSettingsFromServer(): Promise<void> {
 }
 
 async function syncSettingsToServer(settings: AppSettings): Promise<void> {
+  if (typeof window !== 'undefined' && !localStorage.getItem(SESSION_HINT_KEY)) return;
   try {
     await fetch('/api/user/settings', {
       method: 'PUT',

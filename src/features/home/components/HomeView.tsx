@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { BottomNav } from '@/components/layout/BottomNav';
-import { getMockUser, clearMockAuth } from '@/lib/mock-auth';
+import { getMockUser, clearMockAuth, isMockLoggedIn } from '@/lib/mock-auth';
 import { getLocation, DEFAULT_LOCATION, type SavedLocation } from '@/lib/location';
 import type { AppConfig, HomeBanner } from '@/types/app-config';
 
@@ -227,12 +227,33 @@ export function HomeView() {
     setSavedLocation(getLocation());
   }, []);
   const [config, setConfig] = useState<AppConfig | null>(null);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
 
   useEffect(() => {
     fetch('/api/config')
       .then((r) => r.ok ? r.json() : null)
       .then((data) => data && setConfig(data))
       .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const fetchUnread = () => {
+      if (!isMockLoggedIn()) {
+        setUnreadNotifications(0);
+        return;
+      }
+      fetch('/api/notifications?limit=1', { credentials: 'include' })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          const count = Number(data?.unreadCount) || 0;
+          setUnreadNotifications(count);
+        })
+        .catch(() => setUnreadNotifications(0));
+    };
+    fetchUnread();
+    const onFocus = () => fetchUnread();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, []);
 
   const addressStr = [savedLocation.flatNo, savedLocation.address].filter(Boolean).join(' ').toLowerCase();
@@ -306,7 +327,6 @@ export function HomeView() {
           <button
             type="submit"
             className="flex items-center gap-1.5 min-w-0 w-full text-left py-1.5 bg-transparent border-0 p-0 cursor-pointer text-inherit font-inherit"
-            aria-label="Change location"
           >
             <span className="shrink-0 w-5 h-5 flex items-center justify-center text-slate-600 dark:text-slate-400" aria-hidden>
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="w-4 h-4">
@@ -340,6 +360,12 @@ export function HomeView() {
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
+            {unreadNotifications > 0 && (
+              <span
+                className="absolute top-0.5 right-0.5 w-2.5 h-2.5 rounded-full bg-[#fe5001] ring-2 ring-white dark:ring-slate-900"
+                aria-label={`${unreadNotifications} unread notifications`}
+              />
+            )}
           </button>
           {showProfileMenu && (
             <div
@@ -370,6 +396,23 @@ export function HomeView() {
                   </svg>
                 </span>
                 My account
+              </Link>
+              <Link
+                href="/notifications"
+                className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+                role="menuitem"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowProfileMenu(false);
+                }}
+              >
+                <span className="w-5 h-5 flex items-center justify-center text-slate-400 shrink-0">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="w-4 h-4">
+                    <path d="M18 8a6 6 0 1 0-12 0c0 7-3 7-3 7h18s-3 0-3-7" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                </span>
+                Notifications
               </Link>
               <button
                 type="button"
@@ -507,11 +550,13 @@ export function HomeView() {
                 key={i}
                 type="button"
                 onClick={() => setBannerIndex(i)}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === bannerIndex ? 'w-5 bg-[#fe5001]' : 'w-1.5 bg-slate-300 dark:bg-slate-600'
+                className={`h-6 px-1.5 rounded-full transition-all inline-flex items-center justify-center ${
+                  i === bannerIndex ? 'w-7 bg-[#fe5001]/20' : 'w-6 bg-transparent'
                 }`}
                 aria-label={`Go to banner ${i + 1}`}
-              />
+              >
+                <span className={`h-1.5 rounded-full ${i === bannerIndex ? 'w-5 bg-[#fe5001]' : 'w-2 bg-slate-300 dark:bg-slate-600'}`} />
+              </button>
             ))}
           </div>
         </section>
@@ -562,7 +607,7 @@ export function HomeView() {
                 className="shrink-0 w-[140px] rounded-xl overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-600 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div className="aspect-square bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-700 dark:to-slate-600 flex items-center justify-center relative">
-                  <span className="absolute top-2 left-2 bg-[#fe5001] text-white text-[10px] font-bold px-2 py-0.5 rounded">
+                  <span className="absolute top-2 left-2 bg-[#c93f00] text-white text-[10px] font-bold px-2 py-0.5 rounded">
                     {frame.discount}
                   </span>
                 </div>

@@ -10,6 +10,7 @@ import {
   type ThemeMode,
   type AppSettings,
 } from '@/lib/settings';
+import { ensurePushSubscription } from '@/lib/push-subscribe';
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
   { value: 'light', label: 'Light' },
@@ -57,8 +58,10 @@ export function SettingsView() {
             onClick={() => {
               const next = !settings.notifications;
               setNotifications(next);
+              if (next) void ensurePushSubscription();
               setSettingsState((s) => ({ ...s, notifications: next }));
             }}
+            aria-label={`Notifications ${settings.notifications ? 'on' : 'off'}`}
             className={`relative shrink-0 w-11 h-6 rounded-full transition-colors ${
               settings.notifications ? 'bg-[#fe5001]' : 'bg-slate-300 dark:bg-slate-600'
             }`}
@@ -86,8 +89,8 @@ export function SettingsView() {
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   settings.theme === opt.value
-                    ? 'bg-[#fe5001] text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    ? 'bg-[#c93f00] text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
                 {opt.label}
@@ -111,8 +114,8 @@ export function SettingsView() {
                 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   settings.language === opt.value
-                    ? 'bg-[#fe5001] text-white'
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                    ? 'bg-[#c93f00] text-white'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
                 {opt.label}
