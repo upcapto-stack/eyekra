@@ -6,8 +6,7 @@ import { createSession, sessionCookieValue } from '@/lib/server/session';
 
 export const dynamic = 'force-dynamic';
 
-const STATE_COOKIE = 'eyekra_google_oauth_state';
-type GoogleAudience = 'customer' | 'partner';
+const STATE_COOKIE = 'eyekra_partner_google_oauth_state';
 
 function getBaseUrl(request: NextRequest): string {
   const fromEnv = process.env.APP_BASE_URL || process.env.NEXTAUTH_URL;
@@ -21,9 +20,9 @@ function clearStateCookie(): string {
   }`;
 }
 
-function isSafeNextPath(path: string | null | undefined, fallback: string): string {
-  if (!path || !path.startsWith('/')) return fallback;
-  if (path.startsWith('//')) return fallback;
+function isSafeNextPath(path: string | null | undefined): string {
+  if (!path || !path.startsWith('/')) return '/partner';
+  if (path.startsWith('//')) return '/partner';
   return path;
 }
 
@@ -39,32 +38,28 @@ export async function GET(request: NextRequest) {
     const clientId = process.env.GOOGLE_CLIENT_ID;
     const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
     if (!clientId || !clientSecret) {
-      return NextResponse.redirect(new URL('/login?error=google_not_configured', request.url));
+      return NextResponse.redirect(new URL('/partner/login?error=google_not_configured', request.url));
     }
 
     const code = request.nextUrl.searchParams.get('code');
     const stateParam = request.nextUrl.searchParams.get('state');
     const storedState = request.cookies.get(STATE_COOKIE)?.value;
     if (!code || !stateParam || !storedState) {
-      return NextResponse.redirect(new URL('/login?error=google_invalid_state', request.url));
+      return NextResponse.redirect(new URL('/partner/login?error=google_invalid_state', request.url));
     }
 
-    let parsedState: { state: string; nextPath?: string; audience?: GoogleAudience } | null = null;
+    let parsedState: { state: string; nextPath?: string } | null = null;
     try {
-      parsedState = JSON.parse(Buffer.from(stateParam, 'base64url').toString('utf8')) as { state: string; nextPath?: string; audience?: GoogleAudience };
+      parsedState = JSON.parse(Buffer.from(stateParam, 'base64url').toString('utf8')) as { state: string; nextPath?: string };
     } catch {
       parsedState = null;
     }
 
-    const audience: GoogleAudience = parsedState?.audience === 'partner' ? 'partner' : 'customer';
-    const loginPath = audience === 'partner' ? '/partner/login' : '/login';
-    const nextFallback = audience === 'partner' ? '/partner' : '/home';
-
     if (!parsedState || parsedState.state !== storedState) {
-      return NextResponse.redirect(new URL(`${loginPath}?error=google_invalid_state`, request.url));
+      return NextResponse.redirect(new URL('/partner/login?error=google_invalid_state', request.url));
     }
 
-    const redirectUri = `${getBaseUrl(request)}/api/auth/google/callback`;
+    const redirectUri = `${getBaseUrl(request)}/api/partner/auth/google/callback`;
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -79,12 +74,12 @@ export async function GET(request: NextRequest) {
     });
 
     if (!tokenResponse.ok) {
-      return NextResponse.redirect(new URL(`${loginPath}?error=google_token_exchange_failed`, request.url));
+      return NextResponse.redirect(new URL('/partner/login?error=google_token_exchange_failed', request.url));
     }
 
     const tokenData = (await tokenResponse.json()) as { id_token?: string };
     if (!tokenData.id_token) {
-      return NextResponse.redirect(new URL(`${loginPath}?error=google_id_token_missing`, request.url));
+      return NextResponse.redirect(new URL('/partner/login?error=google_id_token_missing', request.url));
     }
 
     const profileResponse = await fetch(
@@ -92,7 +87,7 @@ export async function GET(request: NextRequest) {
       { cache: 'no-store' },
     );
     if (!profileResponse.ok) {
-      return NextResponse.redirect(new URL(`${loginPath}?error=google_profile_fetch_failed`, request.url));
+      return NextResponse.redirect(new URL('/partner/login?error=google_profile_fetch_failed', request.url));
     }
 
     const profile = (await profileResponse.json()) as {
@@ -106,14 +101,11 @@ export async function GET(request: NextRequest) {
     const sub = String(profile.sub ?? '').trim();
     const isEmailVerified = String(profile.email_verified ?? '') === 'true';
     if (!sub || !email || !isEmailVerified) {
-      return NextResponse.redirect(new URL(`${loginPath}?error=google_email_unverified`, request.url));
+      return NextResponse.redirect(new URL('/partner/login?error=google_email_unverified', request.url));
     }
 
     let user = await db.user.findUnique({ where: { email } });
-    if (audience === 'customer' && user && user.role !== UserRole.CUSTOMER) {
-      return NextResponse.redirect(new URL('/login?error=google_customer_only', request.url));
-    }
-    if (audience === 'partner' && user && user.role === UserRole.CUSTOMER) {
+    if (user && user.role === UserRole.CUSTOMER) {
       return NextResponse.redirect(new URL('/partner/login?error=google_partner_only', request.url));
     }
 
@@ -128,15 +120,15 @@ export async function GET(request: NextRequest) {
         }
       }
       if (!chosenMobile) {
-        return NextResponse.redirect(new URL(`${loginPath}?error=google_mobile_generation_failed`, request.url));
+        return NextResponse.redirect(new URL('/partner/login?error=google_mobile_generation_failed', request.url));
       }
 
       user = await db.user.create({
         data: {
-          name: String(profile.name ?? (audience === 'partner' ? 'Partner' : 'Customer')).trim() || (audience === 'partner' ? 'Partner' : 'Customer'),
+          name: String(profile.name ?? 'Partner').trim() || 'Partner',
           email,
           mobile: chosenMobile,
-          role: audience === 'partner' ? UserRole.STAFF : UserRole.CUSTOMER,
+          role: UserRole.STAFF,
           isVerified: true,
         },
       });
@@ -151,13 +143,13 @@ export async function GET(request: NextRequest) {
     }
 
     const token = await createSession(user.id);
-    const target = isSafeNextPath(parsedState.nextPath, nextFallback);
+    const target = isSafeNextPath(parsedState.nextPath);
     const response = NextResponse.redirect(new URL(target, request.url));
     response.headers.append('Set-Cookie', sessionCookieValue(token));
     response.headers.append('Set-Cookie', clearStateCookie());
     return response;
   } catch (error) {
-    console.error('google callback error', error);
-    return NextResponse.redirect(new URL('/login?error=google_login_failed', request.url));
+    console.error('partner google callback error', error);
+    return NextResponse.redirect(new URL('/partner/login?error=google_login_failed', request.url));
   }
 }

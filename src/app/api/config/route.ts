@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { AppConfig } from '@/types/app-config';
 import { db } from '@/lib/db';
+import { UserRole } from '@prisma/client';
 import { isStaffOrAdmin, requireSessionUser } from '@/lib/server/authz';
+import { broadcastToCustomers, createUserNotification } from '@/lib/server/notifications';
 
 const DEFAULT_CATEGORIES = [
   { id: 'eyeglasses', label: 'Eyeglasses', sortOrder: 0 },
@@ -31,7 +33,12 @@ function getConfig(): AppConfig {
 
 export async function GET() {
   try {
-    const latest = await db.appConfigVersion.findFirst({ orderBy: { createdAt: 'desc' } });
+    const [latest, orderCount, customerCount, revenueAgg] = await Promise.all([
+      db.appConfigVersion.findFirst({ orderBy: { createdAt: 'desc' } }),
+      db.order.count(),
+      db.user.count({ where: { role: UserRole.CUSTOMER } }),
+      db.order.aggregate({ _sum: { total: true } }),
+    ]);
     const config = latest?.payload
       ? (latest.payload as unknown as AppConfig)
       : ({
@@ -51,6 +58,12 @@ export async function GET() {
       ? config.collections.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
       : DEFAULT_COLLECTIONS;
     normalized.offerRules = Array.isArray(config.offerRules) ? config.offerRules : [];
+    normalized.stats = {
+      ...(config.stats ?? {}),
+      orderCount,
+      customerCount,
+      totalRevenue: revenueAgg._sum.total ?? 0,
+    };
     return NextResponse.json(normalized);
   } catch (e) {
     console.error('Config read error', e);
@@ -65,6 +78,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
+    const previous = await db.appConfigVersion.findFirst({ orderBy: { createdAt: 'desc' } });
+    const previousConfig = previous?.payload ? (previous.payload as unknown as AppConfig) : null;
     const body = (await request.json()) as AppConfig;
     if (!body || !Array.isArray(body.banners) || !Array.isArray(body.eligibleCities)) {
       return NextResponse.json({ error: 'Invalid config' }, { status: 400 });
@@ -84,6 +99,40 @@ export async function POST(request: NextRequest) {
         updatedBy: user.id,
       },
     });
+    const previousOfferIds = new Set((previousConfig?.offerRules ?? []).map((r) => r.id));
+    const addedOffers = (body.offerRules ?? []).filter((r) => !previousOfferIds.has(r.id)).slice(0, 3);
+    for (const offer of addedOffers) {
+      await broadcastToCustomers({
+        type: 'offer',
+        title: 'New offer is live',
+        message: offer.code ? `${offer.name} (code: ${offer.code})` : offer.name,
+        data: { offerRuleId: offer.id },
+      }).catch(() => undefined);
+      const partners = await db.user.findMany({
+        where: { role: { in: [UserRole.STAFF, UserRole.ADMIN] } },
+        select: { id: true },
+      });
+      for (const partner of partners) {
+        await createUserNotification({
+          userId: partner.id,
+          type: 'offer',
+          title: 'Partner offer update',
+          message: offer.code ? `${offer.name} live with code ${offer.code}` : `${offer.name} is now live`,
+          data: { offerRuleId: offer.id },
+        }).catch(() => undefined);
+      }
+    }
+
+    const prevNewArrivalIds = new Set((previousConfig?.products ?? []).filter((p) => p.newArrival).map((p) => p.id));
+    const currentNewArrivals = (body.products ?? []).filter((p) => p.newArrival && !prevNewArrivalIds.has(p.id));
+    if (currentNewArrivals.length > 0) {
+      await broadcastToCustomers({
+        type: 'new_arrival',
+        title: 'New arrivals added',
+        message: `${currentNewArrivals.length} new frame styles are now available.`,
+        data: { count: currentNewArrivals.length, productIds: currentNewArrivals.map((p) => p.id) },
+      }).catch(() => undefined);
+    }
     return NextResponse.json(body);
   } catch (e) {
     console.error('Config write error', e);
