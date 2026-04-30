@@ -34,6 +34,39 @@ enum BookingStatus {
   CANCELLED
 }
 
+enum PartnerShiftState {
+  OFFLINE
+  ONLINE
+  READY
+  IN_FIELD
+  RETURNING
+}
+
+enum BookingFieldStatus {
+  ASSIGNED
+  ACCEPTED
+  EN_ROUTE
+  ARRIVED
+  OTP_VERIFIED
+  SESSION_ACTIVE
+  COMPLETED
+  REJECTED
+}
+
+enum EquipmentEventType {
+  CHECKOUT
+  RETURN
+}
+
+enum EyeTestStep {
+  VISION
+  REFRACTION
+  IOP
+  COLOR_VISION
+  NOTES
+  REVIEW
+}
+
 model User {
   id            String      @id @default(cuid())
   name          String
@@ -54,6 +87,21 @@ model User {
   tryonItems    TryonItem[]
   orders        Order[]
   bookings      Booking[]
+  notifications Notification[]
+  pushSubscriptions PushSubscription[]
+  attendanceLogs AttendanceLog[]
+  deviceBindings PartnerDeviceBinding[]
+  equipmentAssignments EquipmentAssignment[]
+  equipmentEvents EquipmentEvent[]
+  equipmentDamageReports EquipmentDamageReport[]
+  assignedBookings Booking[] @relation("assignedPartner")
+  bookingEvents BookingEvent[] @relation("bookingEventPartner")
+  journeyTrackings JourneyTracking[]
+  partnerEyeTestSessions EyeTestSession[] @relation("partnerEyeTestSessions")
+  customerEyeTestSessions EyeTestSession[] @relation("customerEyeTestSessions")
+  eyeTestSteps EyeTestStepData[]
+  earningLedgers PartnerEarningLedger[]
+  partnerAuditLogs PartnerAuditLog[]
 }
 
 model Session {
@@ -177,9 +225,13 @@ model Order {
   total           Float
   offerApplied    String?
   items           Json
+  eyeTestSessionId String?
   user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eyeTestSession  EyeTestSession? @relation(fields: [eyeTestSessionId], references: [id], onDelete: SetNull)
+  partnerEarnings PartnerEarningLedger[]
 
   @@index([userId])
+  @@index([eyeTestSessionId])
 }
 
 model Booking {
@@ -199,9 +251,24 @@ model Booking {
   amount          Float
   patients        Json?
   tryonFrameIds   Json?
+  fieldStatus     BookingFieldStatus @default(ASSIGNED)
+  assignedPartnerId String?
+  acceptedAt      DateTime?
+  arrivedAt       DateTime?
+  otpVerifiedAt   DateTime?
+  sessionStartedAt DateTime?
+  completedAt     DateTime?
+  rejectedAt      DateTime?
+  rejectionReason String?
   user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  assignedPartner User?         @relation("assignedPartner", fields: [assignedPartnerId], references: [id], onDelete: SetNull)
+  events          BookingEvent[]
+  tracking        JourneyTracking?
+  eyeTestSession  EyeTestSession?
+  earningLedgers  PartnerEarningLedger[]
 
   @@index([userId])
+  @@index([assignedPartnerId, fieldStatus])
 }
 
 model AppConfigVersion {
@@ -221,4 +288,238 @@ model UploadAsset {
   category    String
   uploadedBy  String?
   createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  message   String
+  data      Json?
+  isRead    Boolean  @default(false)
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, isRead])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+model AttendanceLog {
+  id          String            @id @default(cuid())
+  partnerId   String
+  shiftState  PartnerShiftState
+  punchInAt   DateTime?
+  punchOutAt  DateTime?
+  punchInGeo  Json?
+  punchOutGeo Json?
+  punchInSelfieUrl  String?
+  punchOutSelfieUrl String?
+  punchInLiveness   Boolean     @default(false)
+  punchOutLiveness  Boolean     @default(false)
+  deviceId    String?
+  notes       String?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  partner     User              @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId, createdAt])
+}
+
+model PartnerDeviceBinding {
+  id             String   @id @default(cuid())
+  partnerId      String
+  deviceId       String
+  platform       String?
+  appVersion     String?
+  lastSeenAt     DateTime @default(now())
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  partner        User     @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@unique([partnerId, deviceId])
+  @@index([partnerId, isActive])
+}
+
+model EquipmentItem {
+  id           String   @id @default(cuid())
+  name         String
+  sku          String   @unique
+  category     String?
+  status       String   @default("AVAILABLE")
+  metadata     Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  assignments  EquipmentAssignment[]
+  events       EquipmentEvent[]
+  damageReports EquipmentDamageReport[]
+}
+
+model EquipmentAssignment {
+  id           String   @id @default(cuid())
+  equipmentId  String
+  partnerId    String
+  assignedAt   DateTime @default(now())
+  releasedAt   DateTime?
+  isActive     Boolean  @default(true)
+  checklist    Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  events       EquipmentEvent[]
+  damageReports EquipmentDamageReport[]
+  equipment    EquipmentItem @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  partner      User          @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId, isActive])
+  @@index([equipmentId, isActive])
+}
+
+model EquipmentEvent {
+  id             String            @id @default(cuid())
+  equipmentId    String
+  partnerId      String
+  assignmentId   String?
+  type           EquipmentEventType
+  checklist      Json?
+  createdAt      DateTime          @default(now())
+  equipment      EquipmentItem     @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  partner        User              @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  assignment     EquipmentAssignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+
+  @@index([partnerId, createdAt])
+  @@index([equipmentId, createdAt])
+}
+
+model EquipmentDamageReport {
+  id             String   @id @default(cuid())
+  equipmentId    String
+  partnerId      String
+  assignmentId   String?
+  photoUrl       String?
+  note           String
+  severity       String?  @default("MEDIUM")
+  createdAt      DateTime @default(now())
+  equipment      EquipmentItem @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+  partner        User          @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  assignment     EquipmentAssignment? @relation(fields: [assignmentId], references: [id], onDelete: SetNull)
+
+  @@index([partnerId, createdAt])
+}
+
+model BookingEvent {
+  id           String             @id @default(cuid())
+  bookingId    String
+  partnerId    String?
+  fromStatus   BookingFieldStatus?
+  toStatus     BookingFieldStatus
+  note         String?
+  metadata     Json?
+  createdAt    DateTime           @default(now())
+  booking      Booking            @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  partner      User?              @relation("bookingEventPartner", fields: [partnerId], references: [id], onDelete: SetNull)
+
+  @@index([bookingId, createdAt])
+}
+
+model JourneyTracking {
+  id             String   @id @default(cuid())
+  bookingId       String   @unique
+  partnerId       String
+  startedAt       DateTime @default(now())
+  stoppedAt       DateTime?
+  gpsPath         Json?
+  audioUrl        String?
+  recordingActive Boolean  @default(false)
+  metadata        Json?
+  booking         Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  partner         User     @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId, startedAt])
+}
+
+model EyeTestSession {
+  id            String    @id @default(cuid())
+  bookingId      String    @unique
+  partnerId      String
+  customerId     String
+  isSubmitted    Boolean   @default(false)
+  submittedAt    DateTime?
+  finalData      Json?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  booking        Booking   @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  partner        User      @relation("partnerEyeTestSessions", fields: [partnerId], references: [id], onDelete: Cascade)
+  customer       User      @relation("customerEyeTestSessions", fields: [customerId], references: [id], onDelete: Cascade)
+  steps          EyeTestStepData[]
+  orders         Order[]
+
+  @@index([partnerId, createdAt])
+  @@index([customerId, createdAt])
+}
+
+model EyeTestStepData {
+  id            String     @id @default(cuid())
+  eyeTestSessionId String
+  step          EyeTestStep
+  payload       Json
+  savedByPartnerId String
+  isLocked      Boolean    @default(false)
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  eyeTestSession EyeTestSession @relation(fields: [eyeTestSessionId], references: [id], onDelete: Cascade)
+  savedByPartner User      @relation(fields: [savedByPartnerId], references: [id], onDelete: Cascade)
+
+  @@unique([eyeTestSessionId, step])
+  @@index([savedByPartnerId, createdAt])
+}
+
+model PartnerEarningLedger {
+  id            String   @id @default(cuid())
+  partnerId      String
+  bookingId      String?
+  orderId        String?
+  earningType    String
+  baseAmount     Float   @default(0)
+  distanceAmount Float   @default(0)
+  commissionAmount Float @default(0)
+  incentiveAmount Float  @default(0)
+  totalAmount    Float
+  metadata       Json?
+  createdAt      DateTime @default(now())
+  partner        User     @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  booking        Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+  order          Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+
+  @@index([partnerId, createdAt])
+  @@index([bookingId])
+  @@index([orderId])
+}
+
+model PartnerAuditLog {
+  id         String   @id @default(cuid())
+  partnerId  String
+  action     String
+  entityType String?
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  partner    User     @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+
+  @@index([partnerId, createdAt])
+  @@index([action, createdAt])
 }
