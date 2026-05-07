@@ -1,8 +1,9 @@
 import crypto from 'crypto';
 import { UserRole } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { createSession, sessionCookieValue } from '@/lib/server/session';
+import { db } from '@/core/api/db';
+import { createSession, sessionCookieValue } from '@/core/api/server/session';
+import { resolvePartnerWarehouseAssignment, savePartnerWarehouseAssignment } from '@/core/api/server/partner/warehouse';
 
 export const dynamic = 'force-dynamic';
 
@@ -141,6 +142,9 @@ export async function GET(request: NextRequest) {
         },
       });
     }
+
+    const assignment = await resolvePartnerWarehouseAssignment(user.id);
+    await savePartnerWarehouseAssignment(user.id, assignment);
 
     const token = await createSession(user.id);
     const target = isSafeNextPath(parsedState.nextPath);

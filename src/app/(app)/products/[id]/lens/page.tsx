@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
-import { getProductsList } from '@/lib/products-data';
+import { getProductsList } from '@/shared/utils/products-data';
 import {
   LENS_TYPE_CATEGORIES,
   getLensesByCategory,
@@ -12,10 +12,10 @@ import {
   type LensOption,
   type LensQuizAnswers,
   type LensTypeCategory,
-} from '@/lib/lenses-data';
+} from '@/shared/utils/lenses-data';
 import type { AppConfig } from '@/types/app-config';
-import { addToCart, getCartCount } from '@/lib/cart';
-import { BottomNav } from '@/components/layout/BottomNav';
+import { addToCart, getCartCount } from '@/shared/utils/cart';
+import { BottomNav } from '@/shared/components/layout/BottomNav';
 import type { PrescriptionData, ManualPrescription } from '@/types/prescription';
 
 const USE_OPTIONS: { value: LensQuizAnswers['primaryUse']; label: string }[] = [

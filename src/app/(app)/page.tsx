@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { SplashScreen } from '@/features/splash';
-import { isMockLoggedIn, syncSessionUser } from '@/lib/mock-auth';
+import { SplashScreen } from '@/modules/optical';
+import { isMockLoggedIn, syncSessionUser } from '@/shared/utils/mock-auth';
 
 const SPLASH_SEEN_KEY = 'eyekra-splash-seen';
 

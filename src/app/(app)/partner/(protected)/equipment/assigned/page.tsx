@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { PartnerShell } from '@/features/partner/components/PartnerShell';
+import { PartnerShell } from '@/modules/hrms/components/PartnerShell';
 
 type AssignedItem = {
   assignmentId: string;

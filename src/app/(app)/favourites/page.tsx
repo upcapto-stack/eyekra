@@ -1,4 +1,4 @@
-import { FavouritesView } from '@/features/account/components/FavouritesView';
+import { FavouritesView } from '@/modules/crm/components/FavouritesView';
 
 export default function FavouritesPage() {
   return <FavouritesView />;

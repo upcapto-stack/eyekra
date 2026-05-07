@@ -1,7 +1,8 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { PartnerShell } from '@/features/partner/components/PartnerShell';
+import { PartnerShell } from '@/modules/hrms/components/PartnerShell';
 
 const FLOW = ['ACCEPTED', 'EN_ROUTE', 'ARRIVED', 'OTP_VERIFIED', 'SESSION_ACTIVE', 'COMPLETED'] as const;
 
@@ -49,6 +50,14 @@ export default function PartnerBookingDetailPage({ params }: { params: { id: str
         <p className="text-sm font-semibold text-slate-900 dark:text-slate-100">{booking.customerName}</p>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{booking.address}</p>
         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Current status: {booking.fieldStatus}</p>
+        <div className="mt-3">
+          <Link
+            href={`/partner/eye-test?bookingId=${encodeURIComponent(booking.id)}`}
+            className="inline-flex items-center justify-center common-btn common-btn--primary text-sm py-2 px-4"
+          >
+            Open prescription / eye test
+          </Link>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">

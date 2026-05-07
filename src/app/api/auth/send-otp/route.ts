@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { UserRole } from '@prisma/client';
-import { db } from '@/lib/db';
-import { issueOtp } from '@/lib/server/otp';
-import { limitRequest } from '@/lib/server/rate-limit';
+import { db } from '@/core/api/db';
+import { issueOtp } from '@/core/api/server/otp';
+import { limitRequest } from '@/core/api/server/rate-limit';
+import { createUserNotification } from '@/core/api/server/notifications';
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
@@ -34,6 +35,15 @@ export async function POST(request: NextRequest) {
     }
 
     const otp = await issueOtp(mobile, purpose, user?.id);
+    if (user) {
+      await createUserNotification({
+        userId: user.id,
+        type: 'otp',
+        title: 'OTP sent',
+        message: `OTP sent for ${purpose}. It will expire shortly.`,
+        data: { purpose },
+      }).catch(() => undefined);
+    }
     const showOtp = process.env.NODE_ENV !== 'production';
     return NextResponse.json({
       ok: true,

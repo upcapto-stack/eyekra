@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { BookingStatus } from '@prisma/client';
+import { BookingFieldStatus, BookingStatus } from '@prisma/client';
 import type { EyeTestBooking } from '@/types/booking';
-import { db } from '@/lib/db';
-import { isStaffOrAdmin, requireSessionUser } from '@/lib/server/authz';
+import { db } from '@/core/api/db';
+import { isStaffOrAdmin, requireSessionUser } from '@/core/api/server/authz';
+import { createUserNotification, humanizeBookingStatus } from '@/core/api/server/notifications';
 
 function generateBookingId(): string {
   const t = Date.now().toString(36);
@@ -51,7 +52,11 @@ function mapBooking(record: {
   amount: number;
   patients: unknown;
   tryonFrameIds: unknown;
+  assignedPartnerId?: string | null;
+  fieldStatus?: BookingFieldStatus;
+  assignedPartner?: { id: string; name: string; mobile: string; email: string | null } | null;
 }): EyeTestBooking {
+  const partner = record.assignedPartner ?? null;
   return {
     id: record.id,
     createdAt: record.createdAt.toISOString(),
@@ -69,6 +74,9 @@ function mapBooking(record: {
     amount: record.amount,
     patients: (record.patients as EyeTestBooking['patients']) ?? undefined,
     tryonFrameIds: (record.tryonFrameIds as EyeTestBooking['tryonFrameIds']) ?? undefined,
+    assignedPartnerId: record.assignedPartnerId ?? null,
+    fieldStatus: record.fieldStatus != null ? String(record.fieldStatus) : undefined,
+    assignedPartner: partner ? { id: partner.id, name: partner.name, mobile: partner.mobile, email: partner.email } : null,
   };
 }
 
@@ -80,7 +88,13 @@ export async function GET(request: NextRequest) {
 
   try {
     const where = isStaffOrAdmin(user.role) ? {} : { userId: user.id };
-    const records = await db.booking.findMany({ where, orderBy: { createdAt: 'desc' } });
+    const records = await db.booking.findMany({
+      where,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        assignedPartner: { select: { id: true, name: true, mobile: true, email: true } },
+      },
+    });
     const bookings = records.map(mapBooking);
     if (id) {
       const one = bookings.find((b) => b.id === id);
@@ -138,6 +152,13 @@ export async function POST(request: NextRequest) {
         tryonFrameIds: booking.tryonFrameIds ? JSON.parse(JSON.stringify(booking.tryonFrameIds)) : undefined,
       },
     });
+    await createUserNotification({
+      userId: user.id,
+      type: 'booking_created',
+      title: 'Eye test booking received',
+      message: `Your booking ${booking.id} has been created.`,
+      data: { bookingId: booking.id, status: booking.status },
+    }).catch(() => undefined);
     return NextResponse.json({ bookingId: booking.id, booking });
   } catch (e) {
     console.error('Booking create error', e);
@@ -163,12 +184,29 @@ export async function PATCH(request: NextRequest) {
         { status: 400 }
       );
     }
-    const updated = await db.booking.update({
-      where: { id },
-      data: { status: toBookingStatus(status) },
-    }).catch(() => null);
+    const existing = await db.booking.findUnique({ where: { id }, select: { status: true } });
+    const updated = await db.booking
+      .update({
+        where: { id },
+        data: { status: toBookingStatus(status) },
+      })
+      .catch(() => null);
     if (!updated) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
-    return NextResponse.json({ booking: mapBooking(updated) });
+    const full = await db.booking.findUnique({
+      where: { id: updated.id },
+      include: { assignedPartner: { select: { id: true, name: true, mobile: true, email: true } } },
+    });
+    if (!full) return NextResponse.json({ error: 'Booking not found' }, { status: 404 });
+    if (existing && fromBookingStatus(existing.status) !== status) {
+      await createUserNotification({
+        userId: full.userId,
+        type: 'booking_status',
+        title: `Booking ${full.id} is now ${humanizeBookingStatus(status)}`,
+        message: `Your booking status has changed to ${humanizeBookingStatus(status)}.`,
+        data: { bookingId: full.id, status },
+      }).catch(() => undefined);
+    }
+    return NextResponse.json({ booking: mapBooking(full) });
   } catch (e) {
     console.error('Booking update error', e);
     return NextResponse.json({ error: 'Failed to update booking' }, { status: 500 });

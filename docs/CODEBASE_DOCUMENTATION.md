@@ -145,7 +145,7 @@ Admin layout: sidebar with all links; auth via cookie `admin_secret` (default `e
 - **products:** `Product[]` (frames)
 - **lenses:** `LensOption[]`
 - **attributes:** `AppAttribute[]`, **tags:** `AppTag[]`
-- **stats:** { orderCount?, customerCount?, totalRevenue? }
+- **stats:** { orderCount?, customerCount?, totalRevenue? } – `/api/config` GET pe live DB aggregates se fill hota hai (orders count, customer count, total revenue sum).
 - **updatedAt:** string (ISO)
 
 ### 5.2 AppCategory

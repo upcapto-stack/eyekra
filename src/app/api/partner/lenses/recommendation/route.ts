@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { requirePartnerUser } from '@/lib/server/partner/auth';
+import { db } from '@/core/api/db';
+import { requirePartnerUser } from '@/core/api/server/partner/auth';
 
 function recommendType(spherical: number, cylindrical: number): 'single-vision' | 'blue-cut' | 'progressive' {
   if (Math.abs(spherical) > 4 || Math.abs(cylindrical) > 2) return 'progressive';

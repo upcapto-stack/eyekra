@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { clearMockAuth, syncSessionUser } from '@/lib/mock-auth';
+import { clearMockAuth, syncSessionUser } from '@/shared/utils/mock-auth';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -79,6 +79,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             Bookings
           </Link>
+          <Link
+            href="/partner/bookings"
+            className="block px-3 py-2 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700"
+          >
+            Partner app
+          </Link>
           <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Structure</p>
           <Link
             href="/admin/categories"
@@ -131,6 +137,47 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             Offer rules
           </Link>
+          <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Inventory</p>
+          <Link
+            href="/admin/warehouses"
+            className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+              pathname.startsWith('/admin/warehouses') ? 'bg-[#fe5001]/10 text-[#fe5001]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          >
+            Warehouses
+          </Link>
+          <Link
+            href="/admin/suppliers"
+            className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+              pathname.startsWith('/admin/suppliers') ? 'bg-[#fe5001]/10 text-[#fe5001]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          >
+            Suppliers
+          </Link>
+          <Link
+            href="/admin/purchase-orders"
+            className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+              pathname.startsWith('/admin/purchase-orders') ? 'bg-[#fe5001]/10 text-[#fe5001]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          >
+            Purchase orders
+          </Link>
+          <Link
+            href="/admin/goods-receipts"
+            className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+              pathname.startsWith('/admin/goods-receipts') ? 'bg-[#fe5001]/10 text-[#fe5001]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          >
+            Goods receipts
+          </Link>
+          <Link
+            href="/admin/stock-adjustments"
+            className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+              pathname.startsWith('/admin/stock-adjustments') ? 'bg-[#fe5001]/10 text-[#fe5001]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          >
+            Stock adjustments
+          </Link>
           <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Display</p>
           <Link
             href="/admin/banners"
@@ -148,6 +195,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             }`}
           >
             Cities
+          </Link>
+          <Link
+            href="/admin/partner-warehouses"
+            className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+              pathname.startsWith('/admin/partner-warehouses') ? 'bg-[#fe5001]/10 text-[#fe5001]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          >
+            Partner warehouses
           </Link>
         </nav>
         <div className="p-2 border-t border-slate-200 dark:border-slate-700">

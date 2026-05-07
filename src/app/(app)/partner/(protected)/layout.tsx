@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-import { isPartnerRole } from '@/lib/server/partner/auth';
-import { getSessionUser } from '@/lib/server/session';
+import { isPartnerRole } from '@/core/api/server/partner/auth';
+import { getSessionUser } from '@/core/api/server/session';
 
 export default async function PartnerProtectedLayout({ children }: { children: ReactNode }) {
   const user = await getSessionUser();

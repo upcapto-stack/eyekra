@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { PartnerShell } from '@/features/partner/components/PartnerShell';
+import { PartnerShell } from '@/modules/hrms/components/PartnerShell';
 
 export default function PartnerEarningsPage() {
   const [data, setData] = useState<any>(null);

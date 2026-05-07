@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { BottomNav } from '@/components/layout/BottomNav';
+import { BottomNav } from '@/shared/components/layout/BottomNav';
 
 export default function OrderSuccessPage() {
   const [orderId, setOrderId] = useState('');

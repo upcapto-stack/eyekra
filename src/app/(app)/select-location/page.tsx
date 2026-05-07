@@ -1,4 +1,4 @@
-import { SelectLocationView } from '@/features/home/components/SelectLocationView';
+import { SelectLocationView } from '@/modules/optical/components/SelectLocationView';
 
 export const dynamic = 'force-dynamic';
 

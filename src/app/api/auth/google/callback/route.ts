@@ -1,8 +1,8 @@
 import crypto from 'crypto';
 import { UserRole } from '@prisma/client';
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { createSession, sessionCookieValue } from '@/lib/server/session';
+import { db } from '@/core/api/db';
+import { createSession, sessionCookieValue } from '@/core/api/server/session';
 
 export const dynamic = 'force-dynamic';
 
@@ -110,12 +110,6 @@ export async function GET(request: NextRequest) {
     }
 
     let user = await db.user.findUnique({ where: { email } });
-    if (audience === 'customer' && user && user.role !== UserRole.CUSTOMER) {
-      return NextResponse.redirect(new URL('/login?error=google_customer_only', request.url));
-    }
-    if (audience === 'partner' && user && user.role === UserRole.CUSTOMER) {
-      return NextResponse.redirect(new URL('/partner/login?error=google_partner_only', request.url));
-    }
 
     if (!user) {
       let chosenMobile = '';
@@ -141,10 +135,15 @@ export async function GET(request: NextRequest) {
         },
       });
     } else {
+      const roleUpdate =
+        audience === 'partner' && user.role === UserRole.CUSTOMER
+          ? { role: UserRole.STAFF }
+          : {};
       user = await db.user.update({
         where: { id: user.id },
         data: {
           isVerified: true,
+          ...roleUpdate,
           ...(profile.name ? { name: profile.name.trim() || user.name } : {}),
         },
       });

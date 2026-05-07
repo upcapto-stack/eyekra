@@ -184,7 +184,7 @@ Used by GET/POST /api/config. Structure (see `src/types/app-config.ts`):
 - **lenses:** `LensOption[]` (see §3.5) – lens options.
 - **attributes:** `AppAttribute[]` – key, label, description?, example?, type?, options?
 - **tags:** `AppTag[]` – id, label.
-- **stats:** `{ orderCount?, customerCount?, totalRevenue? }`
+- **stats:** `{ orderCount?, customerCount?, totalRevenue? }` (GET `/api/config` response me live aggregates: total orders, total customers, total revenue sum).
 - **updatedAt:** string (ISO)
 
 ### 3.2 Order

@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { logPartnerAction } from '@/lib/server/partner/audit';
-import { requirePartnerUser } from '@/lib/server/partner/auth';
-import { summarizePathDistanceKm } from '@/lib/server/partner/earnings';
-import { trackingStopSchema } from '@/lib/server/partner/validation';
+import { db } from '@/core/api/db';
+import { logPartnerAction } from '@/core/api/server/partner/audit';
+import { requirePartnerUser } from '@/core/api/server/partner/auth';
+import { summarizePathDistanceKm } from '@/core/api/server/partner/earnings';
+import { trackingStopSchema } from '@/core/api/server/partner/validation';
 
 export async function POST(request: NextRequest) {
   const partner = await requirePartnerUser(request);

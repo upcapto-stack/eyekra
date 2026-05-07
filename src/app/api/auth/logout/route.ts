@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { clearSessionCookieValue, destroySession } from '@/lib/server/session';
+import { clearSessionCookieValue, destroySession } from '@/core/api/server/session';
 
 export async function POST(request: NextRequest) {
   try {

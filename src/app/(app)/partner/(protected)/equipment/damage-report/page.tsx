@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Input } from '@/components/ui/Input';
-import { PartnerShell } from '@/features/partner/components/PartnerShell';
+import { Input } from '@/shared/components/ui/Input';
+import { PartnerShell } from '@/modules/hrms/components/PartnerShell';
 
 export default function PartnerDamageReportPage() {
   const [equipmentId, setEquipmentId] = useState('');

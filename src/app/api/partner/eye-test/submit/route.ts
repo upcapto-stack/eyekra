@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BookingFieldStatus } from '@prisma/client';
-import { db } from '@/lib/db';
-import { createUserNotification } from '@/lib/server/notifications';
-import { logPartnerAction } from '@/lib/server/partner/audit';
-import { requirePartnerUser } from '@/lib/server/partner/auth';
-import { eyeTestSubmitSchema } from '@/lib/server/partner/validation';
+import { db } from '@/core/api/db';
+import { createUserNotification } from '@/core/api/server/notifications';
+import { logPartnerAction } from '@/core/api/server/partner/audit';
+import { requirePartnerUser } from '@/core/api/server/partner/auth';
+import { eyeTestSubmitSchema } from '@/core/api/server/partner/validation';
 
 export async function POST(request: NextRequest) {
   const partner = await requirePartnerUser(request);

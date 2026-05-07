@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BookingFieldStatus } from '@prisma/client';
-import { db } from '@/lib/db';
-import { createUserNotification } from '@/lib/server/notifications';
-import { logPartnerAction } from '@/lib/server/partner/audit';
-import { requirePartnerUser } from '@/lib/server/partner/auth';
-import { canTransitionBookingFieldStatus } from '@/lib/server/partner/booking-state';
-import { bookingStatusUpdateSchema } from '@/lib/server/partner/validation';
+import { db } from '@/core/api/db';
+import { createUserNotification } from '@/core/api/server/notifications';
+import { logPartnerAction } from '@/core/api/server/partner/audit';
+import { requirePartnerUser } from '@/core/api/server/partner/auth';
+import { canTransitionBookingFieldStatus } from '@/core/api/server/partner/booking-state';
+import { bookingStatusUpdateSchema } from '@/core/api/server/partner/validation';
 
 function parseStatus(v: string): BookingFieldStatus | null {
   const key = v.trim().toUpperCase().replace(/-/g, '_');

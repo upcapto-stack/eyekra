@@ -1,4 +1,4 @@
-import { HelpView } from '@/features/account/components/HelpView';
+import { HelpView } from '@/modules/crm/components/HelpView';
 
 export default function HelpPage() {
   return <HelpView />;

@@ -1,4 +1,4 @@
-import { OrdersView } from '@/features/account/components/OrdersView';
+import { OrdersView } from '@/modules/crm/components/OrdersView';
 
 export default function OrdersPage() {
   return <OrdersView />;

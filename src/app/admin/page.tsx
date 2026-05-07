@@ -5,12 +5,28 @@ import { useEffect, useState } from 'react';
 import type { AppConfig } from '@/types/app-config';
 
 const SECTIONS = [
+  {
+    title: 'Field & customer',
+    desc: 'Same booking ID across customer app, admin, and partner',
+    links: [
+      { href: '/admin/bookings', label: 'Admin bookings' },
+      { href: '/partner/bookings', label: 'Partner bookings' },
+      { href: '/partner/eye-test', label: 'Partner eye test' },
+    ],
+  },
   { title: 'Structure', desc: 'Navigation & primary grouping', links: [{ href: '/admin/categories', label: 'Categories' }] },
   { title: 'Data', desc: 'Products, lenses & attributes', links: [{ href: '/admin/products', label: 'Frames' }, { href: '/admin/lenses', label: 'Lenses' }, { href: '/admin/attributes', label: 'Attributes' }] },
   { title: 'Marketing', desc: 'Product groupings for campaigns', links: [{ href: '/admin/collections', label: 'Collections' }] },
   { title: 'Pricing', desc: 'Rule-based offers', links: [{ href: '/admin/offer-rules', label: 'Offer rules' }] },
   { title: 'Display', desc: 'Banners & links', links: [{ href: '/admin/banners', label: 'Banners' }] },
-  { title: 'Settings', desc: 'App config', links: [{ href: '/admin/cities', label: 'Cities' }] },
+  {
+    title: 'Settings',
+    desc: 'App config',
+    links: [
+      { href: '/admin/cities', label: 'Cities' },
+      { href: '/admin/partner-warehouses', label: 'Partner warehouses' },
+    ],
+  },
 ];
 
 function StatCard({
@@ -52,15 +68,32 @@ function StatCard({
   return <div className={className}>{content}</div>;
 }
 
+type Dash = {
+  stats?: {
+    lowStockCount?: number;
+    outOfStockCount?: number;
+    deadStockSkusApprox?: number;
+    avgMarginPct30d?: number | null;
+    variantCount?: number;
+    lensBlankCount?: number;
+  };
+  lowStock?: { sku: string; name: string; available: number; reorderPoint: number }[];
+  reorderThisWeek?: { sku: string; available: number; daysOfCover: number }[];
+};
+
 export default function AdminDashboardPage() {
   const [config, setConfig] = useState<AppConfig | null>(null);
+  const [dash, setDash] = useState<Dash | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/config')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => {
-        setConfig(data ?? null);
+    Promise.all([
+      fetch('/api/config').then((r) => (r.ok ? r.json() : null)),
+      fetch('/api/admin/dashboard', { credentials: 'include' }).then((r) => (r.ok ? r.json() : null)),
+    ])
+      .then(([cfg, d]) => {
+        setConfig(cfg ?? null);
+        setDash(d ?? null);
         setLoading(false);
       })
       .catch(() => setLoading(false));
@@ -77,6 +110,7 @@ export default function AdminDashboardPage() {
   const bannersCount = config?.banners?.length ?? 0;
   const offerRulesCount = config?.offerRules?.length ?? 0;
   const citiesCount = config?.eligibleCities?.length ?? 0;
+  const partnerWarehouseMappingsCount = config?.partnerWarehouseCoverage?.length ?? 0;
   const attributesCount = config?.attributes?.length ?? 0;
   const tagsCount = config?.tags?.length ?? 0;
 
@@ -94,8 +128,27 @@ export default function AdminDashboardPage() {
     <div className="max-w-4xl">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Dashboard</h1>
       <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
-        Pure app ke saare stats yahan dikhenge. Orders, customers aur config se counts.
+        Live orders/customers from DB; catalog counts from config or DB projection. Inventory signals from <code className="text-xs bg-slate-100 dark:bg-slate-800 px-1 rounded">/api/admin/dashboard</code>.
       </p>
+
+      {dash?.stats && (
+        <div className="mb-8 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4">
+          <h2 className="text-sm font-semibold text-amber-900 dark:text-amber-200 mb-2">Inventory &amp; margin (30d)</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm text-amber-900 dark:text-amber-100">
+            <div><span className="text-amber-700 dark:text-amber-300">Low stock SKUs</span><br /><strong>{dash.stats.lowStockCount ?? 0}</strong></div>
+            <div><span className="text-amber-700 dark:text-amber-300">Out of stock</span><br /><strong>{dash.stats.outOfStockCount ?? 0}</strong></div>
+            <div><span className="text-amber-700 dark:text-amber-300">Dead stock (no sales 30d)</span><br /><strong>{dash.stats.deadStockSkusApprox ?? 0}</strong></div>
+            <div><span className="text-amber-700 dark:text-amber-300">Avg margin 30d</span><br /><strong>{dash.stats.avgMarginPct30d != null ? `${dash.stats.avgMarginPct30d}%` : '—'}</strong></div>
+          </div>
+          {(dash.lowStock?.length ?? 0) > 0 && (
+            <ul className="mt-3 text-xs text-amber-900 dark:text-amber-100 space-y-1">
+              {(dash.lowStock ?? []).slice(0, 5).map((r) => (
+                <li key={r.sku}>{r.sku} — {r.name} (avail {r.available}, reorder {r.reorderPoint})</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
 
       {/* Primary stats: Orders, Customers, Revenue */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
@@ -144,6 +197,7 @@ export default function AdminDashboardPage() {
         <StatCard title="Banners" value={bannersCount} href="/admin/banners" icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>} />
         <StatCard title="Offer rules" value={offerRulesCount} href="/admin/offer-rules" icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>} />
         <StatCard title="Cities" value={citiesCount} href="/admin/cities" icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>} />
+        <StatCard title="Partner warehouses" value={partnerWarehouseMappingsCount} href="/admin/partner-warehouses" icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>} />
         <StatCard title="Attributes" value={attributesCount} href="/admin/attributes" icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" /></svg>} />
         <StatCard title="Tags" value={tagsCount} sub="Badges" href="/admin/attributes" icon={<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" /></svg>} />
       </div>
@@ -151,7 +205,7 @@ export default function AdminDashboardPage() {
       {/* Note for orders/customers */}
       <div className="rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-4 text-amber-800 dark:text-amber-200 text-sm mb-8">
         <p className="font-medium mb-1">Orders &amp; customers</p>
-        <p>Orders, customers aur revenue abhi config se aate hain. Jab aap real orders/customers backend connect karoge, in values ko wahan se update karna (e.g. <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded">config.stats</code> via API).</p>
+        <p>Orders, customers aur revenue live backend aggregates se aate hain via <code className="bg-amber-100 dark:bg-amber-900/40 px-1 rounded">/api/config</code> (orders count, customer count, total revenue sum).</p>
       </div>
 
       {/* Quick links (existing sections) */}

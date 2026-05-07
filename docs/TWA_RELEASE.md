@@ -146,3 +146,64 @@ Canonical workflow definition: **`docs/snippets/android-twa-ci.yml`**. Copy it t
 ## 10) Optional — release AAB in GitHub Actions
 
 For a commercial pipeline, store the upload keystore as a **GitHub Actions secret** (e.g. base64-encoded file) and inject `signingConfigs` in Gradle via environment variables or a committed `keystore.properties` template (gitignored values). Prefer **Play App Signing** so the upload key can be rotated without changing the app signing identity users trust. See [Android: sign your app](https://developer.android.com/studio/publish/app-signing).
+
+## 11) Production backend deploy checklist (notifications + uploads)
+
+Use this whenever you deploy backend-affecting changes like in-app notifications or file uploads.
+
+### 11.1 Vercel Production env vars
+
+Set these in Vercel project settings before deploying:
+
+- `DATABASE_URL`
+- `AUTH_SECRET`
+- `R2_ACCOUNT_ID`
+- `R2_ACCESS_KEY_ID`
+- `R2_SECRET_ACCESS_KEY`
+
+**Buckets (choose one pattern):**
+
+- Single bucket mode:
+  - `R2_BUCKET=eyekra-uploads` (or `R2_BUCKET_UPLOADS`)
+- Per-type mode:
+  - `R2_BUCKET_BANNERS`
+  - `R2_BUCKET_CATEGORY_ICONS`
+  - `R2_BUCKET_PRESCRIPTIONS`
+
+**URL vars:**
+
+- `R2_PUBLIC_BASE_URL` (recommended)
+- `R2_PRIVATE_BASE_URL` (optional; better for prescription/private docs)
+
+**Alternative (Backblaze B2 / S3-compatible):**
+
+- `B2_ENDPOINT` (example: `https://s3.us-west-004.backblazeb2.com`)
+- `B2_REGION` (example: `us-west-004`)
+- `B2_ACCESS_KEY_ID`
+- `B2_SECRET_ACCESS_KEY`
+- Buckets can stay same via `R2_BUCKET*` vars (app uses same bucket env keys).
+
+### 11.2 Run production DB migrations
+
+New notification features require the `Notification` table, so run:
+
+```bash
+npx prisma migrate deploy
+```
+
+`vercel-build` already runs migrate deploy, but only works when production env vars are correctly set.
+
+### 11.3 Redeploy app
+
+Trigger a fresh production deployment on Vercel after env + migration are ready.
+
+### 11.4 Post-deploy smoke tests
+
+- Admin updates **order status** -> user sees in-app notification.
+- Admin updates **booking status** -> user sees in-app notification.
+- OTP **send/verify** flow -> notification entries appear.
+- New **offer/new arrivals** saved in admin config -> customer broadcast notifications created.
+- Upload endpoints work:
+  - banner upload
+  - category icon upload
+  - prescription upload

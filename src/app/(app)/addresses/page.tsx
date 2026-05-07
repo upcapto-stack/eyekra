@@ -1,4 +1,4 @@
-import { AddressesView } from '@/features/account/components/AddressesView';
+import { AddressesView } from '@/modules/crm/components/AddressesView';
 
 export const dynamic = 'force-dynamic';
 

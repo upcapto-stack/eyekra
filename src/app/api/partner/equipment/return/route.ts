@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { logPartnerAction } from '@/lib/server/partner/audit';
-import { requirePartnerUser } from '@/lib/server/partner/auth';
-import { equipmentActionSchema } from '@/lib/server/partner/validation';
+import { db } from '@/core/api/db';
+import { logPartnerAction } from '@/core/api/server/partner/audit';
+import { requirePartnerUser } from '@/core/api/server/partner/auth';
+import { equipmentActionSchema } from '@/core/api/server/partner/validation';
 
 export async function POST(request: NextRequest) {
   const partner = await requirePartnerUser(request);

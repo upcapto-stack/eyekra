@@ -1,4 +1,4 @@
-import type { SavedLocation } from '@/lib/location';
+import type { SavedLocation } from '@/shared/utils/location';
 
 export interface EyeTestBooking {
   id: string;
@@ -22,4 +22,14 @@ export interface EyeTestBooking {
   patients?: { name: string; mobile: string }[];
   /** Home try-on frame IDs if any */
   tryonFrameIds?: string[];
+  /** Partner assigned for field visit (when set) */
+  assignedPartnerId?: string | null;
+  /** Partner app lifecycle: ASSIGNED, ACCEPTED, EN_ROUTE, … */
+  fieldStatus?: string;
+  assignedPartner?: {
+    id: string;
+    name: string;
+    mobile: string;
+    email: string | null;
+  } | null;
 }

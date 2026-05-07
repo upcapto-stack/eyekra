@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { isStaffOrAdmin, requireSessionUser } from '@/lib/server/authz';
-import { createPresignedUploadUrl, isR2Configured } from '@/lib/server/r2';
+import { db } from '@/core/api/db';
+import { isStaffOrAdmin, requireSessionUser } from '@/core/api/server/authz';
+import { buildR2ObjectUrl, createPresignedUploadUrl, getMissingR2ConfigKeys, isR2Configured, resolveR2Bucket } from '@/core/api/server/r2';
 
 const MAX_SIZE = 3 * 1024 * 1024; // 3MB
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   if (!isR2Configured()) {
-    return NextResponse.json({ error: 'R2 is not configured' }, { status: 500 });
+    return NextResponse.json({ error: `R2 is not configured. Missing: ${getMissingR2ConfigKeys().join(', ')}` }, { status: 500 });
   }
   try {
     const formData = await request.formData();
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
     }
     const ext = file.name.split('.').pop() || 'png';
     const safeName = `banners/${Date.now()}-${Math.random().toString(36).slice(2, 10)}.${ext}`;
-    const bucket = process.env.R2_BUCKET_BANNERS || '';
+    const bucket = resolveR2Bucket('banners');
     if (!bucket) return NextResponse.json({ error: 'R2 bucket not configured' }, { status: 500 });
     const uploadUrl = await createPresignedUploadUrl({
       bucket,
@@ -50,8 +50,7 @@ export async function POST(request: NextRequest) {
     if (!uploadRes.ok) {
       return NextResponse.json({ error: 'Upload failed at storage layer' }, { status: 500 });
     }
-    const publicBase = process.env.R2_PUBLIC_BASE_URL || '';
-    const url = publicBase ? `${publicBase}/${safeName}` : safeName;
+    const url = buildR2ObjectUrl(safeName);
     await db.uploadAsset.create({
       data: {
         bucket,

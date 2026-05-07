@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { AppConfig } from '@/types/app-config';
-import { db } from '@/lib/db';
+import { db } from '@/core/api/db';
 import { UserRole } from '@prisma/client';
-import { isStaffOrAdmin, requireSessionUser } from '@/lib/server/authz';
-import { broadcastToCustomers, createUserNotification } from '@/lib/server/notifications';
+import { isStaffOrAdmin, requireSessionUser } from '@/core/api/server/authz';
+import { broadcastToCustomers, createUserNotification } from '@/core/api/server/notifications';
+import { dbLensBlankToLensOption, dbProductToLegacyProduct } from '@/core/api/server/catalog-projection';
 
 const DEFAULT_CATEGORIES = [
   { id: 'eyeglasses', label: 'Eyeglasses', sortOrder: 0 },
@@ -33,17 +34,20 @@ function getConfig(): AppConfig {
 
 export async function GET() {
   try {
-    const [latest, orderCount, customerCount, revenueAgg] = await Promise.all([
+    const [latest, orderCount, customerCount, revenueAgg, productDbCount, lensDbCount] = await Promise.all([
       db.appConfigVersion.findFirst({ orderBy: { createdAt: 'desc' } }),
       db.order.count(),
       db.user.count({ where: { role: UserRole.CUSTOMER } }),
       db.order.aggregate({ _sum: { total: true } }),
+      db.product.count(),
+      db.lensBlank.count(),
     ]);
     const config = latest?.payload
       ? (latest.payload as unknown as AppConfig)
       : ({
           banners: [],
           eligibleCities: [],
+          partnerWarehouseCoverage: [],
           categories: DEFAULT_CATEGORIES,
           collections: DEFAULT_COLLECTIONS,
           offerRules: [],
@@ -58,12 +62,38 @@ export async function GET() {
       ? config.collections.slice().sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0))
       : DEFAULT_COLLECTIONS;
     normalized.offerRules = Array.isArray(config.offerRules) ? config.offerRules : [];
+    normalized.partnerWarehouseCoverage = Array.isArray(config.partnerWarehouseCoverage)
+      ? config.partnerWarehouseCoverage
+      : [];
     normalized.stats = {
       ...(config.stats ?? {}),
       orderCount,
       customerCount,
       totalRevenue: revenueAgg._sum.total ?? 0,
     };
+
+    if (productDbCount > 0) {
+      const rows = await db.product.findMany({
+        where: { isActive: true, isPublished: true },
+        include: {
+          variants: {
+            where: { isActive: true },
+            orderBy: { sku: 'asc' },
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+      });
+      normalized.products = rows.map(dbProductToLegacyProduct);
+    }
+    if (lensDbCount > 0) {
+      const lbs = await db.lensBlank.findMany({
+        where: { isActive: true },
+        include: { category: true },
+        orderBy: { sellingPrice: 'asc' },
+      });
+      normalized.lenses = lbs.map(dbLensBlankToLensOption);
+    }
+
     return NextResponse.json(normalized);
   } catch (e) {
     console.error('Config read error', e);
@@ -84,13 +114,19 @@ export async function POST(request: NextRequest) {
     if (!body || !Array.isArray(body.banners) || !Array.isArray(body.eligibleCities)) {
       return NextResponse.json({ error: 'Invalid config' }, { status: 400 });
     }
+    const useDbCatalog = (await db.product.count()) > 0;
     if (!Array.isArray(body.categories)) body.categories = DEFAULT_CATEGORIES;
     if (!Array.isArray(body.collections)) body.collections = DEFAULT_COLLECTIONS;
     if (!Array.isArray(body.offerRules)) body.offerRules = [];
     if (!Array.isArray(body.products)) body.products = [];
     if (!Array.isArray(body.lenses)) body.lenses = [];
+    if (useDbCatalog) {
+      body.products = [];
+      body.lenses = [];
+    }
     if (!Array.isArray(body.attributes)) body.attributes = [];
     if (!Array.isArray(body.tags)) body.tags = [];
+    if (!Array.isArray(body.partnerWarehouseCoverage)) body.partnerWarehouseCoverage = [];
     if (body.stats == null || typeof body.stats !== 'object') body.stats = {};
     body.updatedAt = new Date().toISOString();
     await db.appConfigVersion.create({
@@ -124,7 +160,9 @@ export async function POST(request: NextRequest) {
     }
 
     const prevNewArrivalIds = new Set((previousConfig?.products ?? []).filter((p) => p.newArrival).map((p) => p.id));
-    const currentNewArrivals = (body.products ?? []).filter((p) => p.newArrival && !prevNewArrivalIds.has(p.id));
+    const currentNewArrivals = useDbCatalog
+      ? []
+      : (body.products ?? []).filter((p) => p.newArrival && !prevNewArrivalIds.has(p.id));
     if (currentNewArrivals.length > 0) {
       await broadcastToCustomers({
         type: 'new_arrival',

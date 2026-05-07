@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { AppScreen } from '@/components/layout/AppScreen';
-import { OrderTrackingJourney } from '@/features/account/components/OrderTrackingJourney';
-import { getMockUser } from '@/lib/mock-auth';
+import { AppScreen } from '@/shared/components/layout/AppScreen';
+import { OrderTrackingJourney } from '@/modules/crm/components/OrderTrackingJourney';
+import { getMockUser } from '@/shared/utils/mock-auth';
 import type { Order } from '@/types/order';
 
 function formatDate(iso: string): string {

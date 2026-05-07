@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { AppScreen } from '@/components/layout/AppScreen';
-import { BookingTrackingJourney } from '@/features/account/components/BookingTrackingJourney';
-import { getMockUser } from '@/lib/mock-auth';
+import { AppScreen } from '@/shared/components/layout/AppScreen';
+import { BookingTrackingJourney } from '@/modules/crm/components/BookingTrackingJourney';
+import { getMockUser } from '@/shared/utils/mock-auth';
 import type { EyeTestBooking } from '@/types/booking';
 
 function formatSlotDate(dateStr: string): string {
@@ -77,6 +77,13 @@ export default function BookingDetailPage() {
   return (
     <AppScreen title={booking.id} backHref="/bookings">
       <div className="space-y-4">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 px-3 py-2.5">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Your booking reference</p>
+          <p className="font-mono text-sm text-slate-900 dark:text-white break-all mt-0.5">{booking.id}</p>
+          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+            Eyekra partners and support use this same ID in their tools so your visit, eye test, and admin records stay in sync.
+          </p>
+        </div>
         <BookingTrackingJourney booking={booking} />
         <div className="flex items-center justify-between">
           <span className="px-2 py-1 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm font-medium">

@@ -1,7 +1,7 @@
 'use client';
 
 import { Suspense } from 'react';
-import { ProductListingView } from '@/features/products';
+import { ProductListingView } from '@/modules/optical';
 
 function ProductsContent() {
   return <ProductListingView />;

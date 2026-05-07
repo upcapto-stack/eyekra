@@ -1,4 +1,4 @@
-import { LoginFormView } from '@/features/auth';
+import { LoginFormView } from '@/modules/auth';
 
 export default function LoginPage() {
   return <LoginFormView />;

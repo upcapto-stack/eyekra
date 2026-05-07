@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSessionUser } from '@/lib/server/session';
+import { getSessionUser } from '@/core/api/server/session';
 
 export async function GET(request: NextRequest) {
   try {

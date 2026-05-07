@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { setMockLoggedIn, setMockUser } from '@/lib/mock-auth';
+import { setMockLoggedIn, setMockUser } from '@/shared/utils/mock-auth';
 
 export default function AdminLoginPage() {
   const router = useRouter();

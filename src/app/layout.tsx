@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Source_Sans_3 } from 'next/font/google';
 import './globals.css';
-import { ThemeProvider } from '@/components/ThemeProvider';
+import { ThemeProvider } from '@/shared/components/ThemeProvider';
 
 const sourceSans = Source_Sans_3({
   subsets: ['latin'],

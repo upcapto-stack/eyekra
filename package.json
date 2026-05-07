@@ -17,6 +17,7 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:deploy": "prisma migrate deploy",
     "prisma:seed": "node prisma/seed.cjs",
+    "prisma:seed-catalog": "node prisma/seed-catalog.cjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
@@ -28,16 +29,19 @@
     "@upstash/redis": "^1.37.0",
     "bcryptjs": "^3.0.3",
     "leaflet": "^1.9.4",
+    "lucide-react": "^1.14.0",
     "next": "14.2.35",
     "next-auth": "^4.24.14",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "web-push": "^3.6.7",
     "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+    "@types/web-push": "^3.6.4",
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.0",
     "eslint-config-next": "14.2.35",

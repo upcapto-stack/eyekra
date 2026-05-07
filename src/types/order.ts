@@ -1,4 +1,4 @@
-import type { SavedLocation } from '@/lib/location';
+import type { SavedLocation } from '@/shared/utils/location';
 import type { PrescriptionData } from '@/types/prescription';
 
 export interface OrderItem {

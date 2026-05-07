@@ -2,8 +2,8 @@
  * App config types – editable from admin panel.
  * Aligns with docs/ARCHITECTURE.md: Structure→Category, Data→Attributes, Marketing→Collections, Pricing→Offers, Display→Banners.
  */
-import type { Product } from '@/lib/products-data';
-import type { LensOption } from '@/lib/lenses-data';
+import type { Product } from '@/shared/utils/products-data';
+import type { LensOption } from '@/shared/utils/lenses-data';
 
 /** Tailwind text size class for banner copy */
 export type BannerTextSize = 'text-xs' | 'text-sm' | 'text-base' | 'text-lg' | 'text-xl' | 'text-2xl' | 'text-3xl';
@@ -110,6 +110,15 @@ export interface AppTag {
   label: string;
 }
 
+export interface PartnerWarehouseCoverage {
+  id: string;
+  /** Lowercase city token, e.g. "noida" */
+  city: string;
+  warehouseName: string;
+  warehouseAddress?: string;
+  isActive?: boolean;
+}
+
 /** Pricing layer: rule-based offers. Apply to Product, Category, Collection, or Global (entire_order). Priority = highest wins. */
 export type OfferDiscountType = 'percent_off' | 'fixed_off' | 'buy_x_get_y' | 'free_shipping';
 /** entire_order = Global level; collection/product/category = specific targets */
@@ -157,7 +166,9 @@ export interface AppConfig {
   attributes?: AppAttribute[];
   /** Reusable tags/badges for collections, products, etc. */
   tags?: AppTag[];
-  /** Dashboard stats (update via backend or admin when orders/customers are tracked) */
+  /** Partner routing map: city -> warehouse assignment */
+  partnerWarehouseCoverage?: PartnerWarehouseCoverage[];
+  /** Dashboard stats returned by /api/config (live order/customer/revenue aggregates) */
   stats?: {
     orderCount?: number;
     customerCount?: number;

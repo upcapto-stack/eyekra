@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { db } from '@/lib/db';
-import { requireSessionUser } from '@/lib/server/authz';
+import { db } from '@/core/api/db';
+import { requireSessionUser } from '@/core/api/server/authz';
 
 export async function GET(request: NextRequest) {
   const user = await requireSessionUser(request);

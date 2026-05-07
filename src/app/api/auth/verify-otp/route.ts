@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { UserRole } from '@prisma/client';
-import { db } from '@/lib/db';
-import { consumeOtp } from '@/lib/server/otp';
-import { createSession, sessionCookieValue } from '@/lib/server/session';
+import { db } from '@/core/api/db';
+import { consumeOtp } from '@/core/api/server/otp';
+import { createSession, sessionCookieValue } from '@/core/api/server/session';
+import { createUserNotification } from '@/core/api/server/notifications';
 
 export async function POST(request: NextRequest) {
   try {
@@ -47,6 +48,13 @@ export async function POST(request: NextRequest) {
     }
 
     const token = await createSession(user.id);
+    await createUserNotification({
+      userId: user.id,
+      type: 'otp',
+      title: 'OTP verified',
+      message: 'Your OTP has been verified and you are signed in.',
+      data: { purpose },
+    }).catch(() => undefined);
     const response = NextResponse.json({
       user: { id: user.id, name: user.name, mobile: user.mobile, email: user.email, role: user.role },
     });

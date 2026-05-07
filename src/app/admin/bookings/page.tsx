@@ -1,11 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { EyeTestBooking } from '@/types/booking';
 import type { AppConfig } from '@/types/app-config';
-import { getProductsList } from '@/lib/products-data';
-import type { Product } from '@/lib/products-data';
+import { getProductsList } from '@/shared/utils/products-data';
+import type { Product } from '@/shared/utils/products-data';
 
 const getSecret = () =>
   document.cookie.split('; ').find((c) => c.startsWith('admin_secret='))?.split('=')[1] || '';
@@ -68,6 +68,47 @@ function statusLabel(s: EyeTestBooking['status']): string {
   return s === 'cancelled' ? 'Cancelled' : s.replace(/_/g, ' ');
 }
 
+function fieldStatusLabel(raw?: string | null): string {
+  if (!raw) return '—';
+  return raw.replace(/_/g, ' ');
+}
+
+function partnerDisplayName(b: EyeTestBooking): string {
+  if (b.assignedPartner?.name) return b.assignedPartner.name;
+  if (b.assignedPartnerId) return `ID ${b.assignedPartnerId.slice(0, 8)}…`;
+  return 'Unassigned';
+}
+
+type AdminPartnerPerfRow = {
+  partnerId: string;
+  name: string;
+  mobile: string;
+  email: string | null;
+  bookingsAssigned: number;
+  fieldCompleted: number;
+  journeyCompleted: number;
+  fieldConversionRate: number;
+  journeyConversionRate: number;
+  avgOrderValue: number;
+  ledgerTotal: number;
+  ledgerEntries: number;
+  orderLinkedLedgerRows: number;
+};
+
+type AdminPartnerPerfResponse = {
+  sinceDays: number;
+  since: string;
+  totals: {
+    partnersWithActivity: number;
+    bookingsAssigned: number;
+    fieldCompleted: number;
+    journeyCompleted: number;
+    ledgerTotal: number;
+    ledgerEntries: number;
+  };
+  partners: AdminPartnerPerfRow[];
+};
+
 export default function AdminBookingsPage() {
   const [bookings, setBookings] = useState<EyeTestBooking[]>([]);
   const [config, setConfig] = useState<AppConfig | null>(null);
@@ -75,8 +116,14 @@ export default function AdminBookingsPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<EyeTestBooking['status']>('pending');
+  const [perfDays, setPerfDays] = useState(30);
+  const [perf, setPerf] = useState<AdminPartnerPerfResponse | null>(null);
+  const [perfLoading, setPerfLoading] = useState(true);
+  const [perfError, setPerfError] = useState<string | null>(null);
 
   const productList = getProductsList(config?.products);
+
+  const unassignedCount = useMemo(() => bookings.filter((b) => !b.assignedPartnerId).length, [bookings]);
 
   const fetchBookings = () => {
     fetch('/api/bookings', {
@@ -93,6 +140,25 @@ export default function AdminBookingsPage() {
   useEffect(() => {
     fetchBookings();
   }, []);
+
+  useEffect(() => {
+    setPerfLoading(true);
+    setPerfError(null);
+    fetch(`/api/admin/partner-performance?days=${perfDays}`, { credentials: 'include' })
+      .then((r) => {
+        if (!r.ok) {
+          if (r.status === 401) throw new Error('Sign in as staff or admin to load partner performance.');
+          throw new Error('Could not load partner performance.');
+        }
+        return r.json() as Promise<AdminPartnerPerfResponse>;
+      })
+      .then(setPerf)
+      .catch((e: Error) => {
+        setPerf(null);
+        setPerfError(e.message ?? 'Could not load partner performance.');
+      })
+      .finally(() => setPerfLoading(false));
+  }, [perfDays]);
 
   useEffect(() => {
     fetch('/api/config')
@@ -122,18 +188,119 @@ export default function AdminBookingsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl">
+      <div className="max-w-6xl">
         <p className="text-slate-500 dark:text-slate-400">Loading bookings…</p>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl">
+    <div className="max-w-6xl">
       <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Bookings</h1>
       <p className="text-slate-500 dark:text-slate-400 text-sm mb-6">
         Flow: Customer books → you assign a nearby optometrist and confirm (customer gets &quot;Booking confirmed&quot;) → Out for visit → Optometrist reached (customer gets &quot;Optometrist reached&quot;) → Mark completed after successful test.
       </p>
+      <p className="text-slate-600 dark:text-slate-300 text-sm mb-4 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3">
+        <span className="font-semibold text-slate-900 dark:text-white">Tracking:</span> each row shows{' '}
+        <span className="font-medium">customer journey status</span> (pill) and{' '}
+        <span className="font-medium">assigned partner + field status</span> (partner app). Expand a booking for full customer, partner, and cross-links.
+      </p>
+
+      <div className="mb-6 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-white">Partner performance</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 max-w-2xl">
+              Bookings counted by <span className="font-medium text-slate-700 dark:text-slate-300">created date</span> in the window and currently assigned to the partner (same as the partner app performance screen). Earnings sum{' '}
+              <span className="font-medium text-slate-700 dark:text-slate-300">PartnerEarningLedger</span> in the window. Customer done = admin journey status completed.
+            </p>
+            {unassignedCount > 0 ? (
+              <p className="text-xs text-amber-800 dark:text-amber-200 mt-2">
+                {unassignedCount} booking{unassignedCount === 1 ? '' : 's'} in the list below still have no partner assigned.
+              </p>
+            ) : null}
+          </div>
+          <label className="flex items-center gap-2 text-xs text-slate-600 dark:text-slate-400 shrink-0">
+            <span className="font-medium">Window</span>
+            <select
+              value={perfDays}
+              onChange={(e) => setPerfDays(Number(e.target.value))}
+              className="rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white text-sm px-2 py-1.5"
+            >
+              {[7, 30, 60, 90, 120].map((d) => (
+                <option key={d} value={d}>
+                  Last {d} days
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {perfError ? (
+          <div className="px-4 py-3 text-sm text-red-600 dark:text-red-400">{perfError}</div>
+        ) : perfLoading ? (
+          <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">Loading partner metrics…</div>
+        ) : perf && perf.totals.partnersWithActivity === 0 ? (
+          <div className="px-4 py-6 text-sm text-slate-500 dark:text-slate-400">
+            No partner bookings or ledger entries in the last {perfDays} days.
+          </div>
+        ) : perf ? (
+          <>
+            <div className="px-4 py-2 bg-slate-50 dark:bg-slate-900/40 text-xs text-slate-600 dark:text-slate-400 flex flex-wrap gap-x-4 gap-y-1">
+              <span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{perf.totals.partnersWithActivity}</span> partners
+              </span>
+              <span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{perf.totals.bookingsAssigned}</span> assigned bookings
+              </span>
+              <span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{perf.totals.fieldCompleted}</span> field completed
+              </span>
+              <span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{perf.totals.journeyCompleted}</span> customer journey completed
+              </span>
+              <span>
+                Ledger <span className="font-semibold text-slate-800 dark:text-slate-200">{formatMoney(perf.totals.ledgerTotal)}</span> ({perf.totals.ledgerEntries} lines)
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm min-w-[800px]">
+                <thead>
+                  <tr className="text-left text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                    <th className="px-4 py-2 font-semibold">Partner</th>
+                    <th className="px-4 py-2 font-semibold">Mobile</th>
+                    <th className="px-4 py-2 font-semibold text-right">Assigned</th>
+                    <th className="px-4 py-2 font-semibold text-right">Field done</th>
+                    <th className="px-4 py-2 font-semibold text-right">Customer done</th>
+                    <th className="px-4 py-2 font-semibold text-right">Field %</th>
+                    <th className="px-4 py-2 font-semibold text-right">Journey %</th>
+                    <th className="px-4 py-2 font-semibold text-right">AOV ₹</th>
+                    <th className="px-4 py-2 font-semibold text-right">Earnings ₹</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {perf.partners.map((row) => (
+                    <tr key={row.partnerId} className="border-b border-slate-100 dark:border-slate-700/80 last:border-0">
+                      <td className="px-4 py-2.5 text-slate-900 dark:text-white font-medium">{row.name}</td>
+                      <td className="px-4 py-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">{row.mobile || '—'}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums">{row.bookingsAssigned}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-emerald-700 dark:text-emerald-300">{row.fieldCompleted}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-sky-700 dark:text-sky-300">{row.journeyCompleted}</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-slate-700 dark:text-slate-300">{row.fieldConversionRate}%</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-slate-700 dark:text-slate-300">{row.journeyConversionRate}%</td>
+                      <td className="px-4 py-2.5 text-right tabular-nums text-slate-700 dark:text-slate-300">
+                        {row.avgOrderValue > 0 ? row.avgOrderValue.toLocaleString('en-IN') : '—'}
+                      </td>
+                      <td className="px-4 py-2.5 text-right tabular-nums font-medium text-slate-900 dark:text-white">
+                        {row.ledgerTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        ) : null}
+      </div>
 
       <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 overflow-hidden">
         {bookings.length === 0 ? (
@@ -160,6 +327,20 @@ export default function AdminBookingsPage() {
                   <span className={`px-2 py-0.5 rounded text-xs font-medium ${STATUS_COLORS[booking.status] ?? 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'}`}>
                     {statusLabel(booking.status)}
                   </span>
+                  <span
+                    className="px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-900 dark:text-indigo-100 max-w-[10rem] truncate"
+                    title={partnerDisplayName(booking)}
+                  >
+                    {partnerDisplayName(booking)}
+                  </span>
+                  {booking.fieldStatus ? (
+                    <span
+                      className="px-2 py-0.5 rounded text-xs font-medium bg-slate-200 dark:bg-slate-600 text-slate-800 dark:text-slate-100 max-w-[9rem] truncate"
+                      title={booking.fieldStatus}
+                    >
+                      Field: {fieldStatusLabel(booking.fieldStatus)}
+                    </span>
+                  ) : null}
                   <span className="text-slate-700 dark:text-slate-300 font-medium">{booking.customer.name}</span>
                   <span className="text-slate-500 dark:text-slate-400 text-sm">{booking.customer.mobile}</span>
                   <span className="text-slate-500 dark:text-slate-400 text-sm">{formatSlotDate(booking.preferredDate)}</span>
@@ -237,12 +418,37 @@ export default function AdminBookingsPage() {
                         </div>
                       )}
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-2 pt-4">
+                    <div className="grid gap-4 sm:grid-cols-3 pt-4">
                       <div>
                         <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Customer</h3>
                         <p className="text-slate-900 dark:text-white font-medium">{booking.customer.name}</p>
                         <p className="text-slate-600 dark:text-slate-400 text-sm">{booking.customer.mobile}</p>
                         <p className="text-slate-600 dark:text-slate-400 text-sm">{booking.customer.email}</p>
+                      </div>
+                      <div>
+                        <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Assigned partner (field)</h3>
+                        {booking.assignedPartnerId ? (
+                          <>
+                            <p className="text-slate-900 dark:text-white font-medium">{partnerDisplayName(booking)}</p>
+                            {booking.assignedPartner?.mobile ? (
+                              <p className="text-slate-600 dark:text-slate-400 text-sm">{booking.assignedPartner.mobile}</p>
+                            ) : null}
+                            {booking.assignedPartner?.email ? (
+                              <p className="text-slate-600 dark:text-slate-400 text-sm">{booking.assignedPartner.email}</p>
+                            ) : null}
+                            <p className="text-slate-500 dark:text-slate-500 text-xs font-mono mt-1 break-all">{booking.assignedPartnerId}</p>
+                          </>
+                        ) : (
+                          <p className="text-slate-600 dark:text-slate-400 text-sm">No partner assigned yet.</p>
+                        )}
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-2">
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">Field status:</span>{' '}
+                          {booking.fieldStatus ? fieldStatusLabel(booking.fieldStatus) : '—'} (partner app progression)
+                        </p>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                          <span className="font-semibold text-slate-700 dark:text-slate-300">Customer journey:</span>{' '}
+                          {statusLabel(booking.status)} (admin / notifications)
+                        </p>
                       </div>
                       <div>
                         <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Visit</h3>
@@ -302,6 +508,46 @@ export default function AdminBookingsPage() {
                     )}
                     <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
                       <p className="text-sm font-semibold text-slate-900 dark:text-white">Amount: {formatMoney(booking.amount)}</p>
+                    </div>
+                    <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
+                      <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase mb-2">Connect admin → partner → customer</h3>
+                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-3">
+                        One booking ID in the database. Customer tracks in <span className="font-medium">My bookings</span>; partner captures the eye test with the same ID (must be logged in as partner).
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Link
+                          href={`/partner/bookings/${encodeURIComponent(booking.id)}`}
+                          className="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 text-sm font-medium hover:border-[#fe5001]/50 hover:bg-[#fe5001]/5"
+                        >
+                          Open in partner app
+                        </Link>
+                        <Link
+                          href={`/partner/eye-test?bookingId=${encodeURIComponent(booking.id)}`}
+                          className="inline-flex items-center px-3 py-2 rounded-lg bg-[#fe5001] text-white text-sm font-medium hover:bg-[#fe5001]/90"
+                        >
+                          Partner eye test sheet
+                        </Link>
+                        <Link
+                          href={`/bookings/${encodeURIComponent(booking.id)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-slate-800 dark:text-slate-200 text-sm font-medium hover:border-[#fe5001]/50"
+                        >
+                          Customer tracking (new tab)
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            void navigator.clipboard?.writeText(booking.id).then(
+                              () => undefined,
+                              () => undefined,
+                            );
+                          }}
+                          className="inline-flex items-center px-3 py-2 rounded-lg border border-dashed border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 text-sm"
+                        >
+                          Copy booking ID
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}

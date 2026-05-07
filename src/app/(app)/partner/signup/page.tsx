@@ -1,4 +1,4 @@
-import { PartnerSignUpView } from '@/features/partner-auth/components/PartnerSignUpView';
+import { PartnerSignUpView } from '@/modules/hrms/components/PartnerSignUpView';
 
 export default function PartnerSignUpPage() {
   return <PartnerSignUpView />;

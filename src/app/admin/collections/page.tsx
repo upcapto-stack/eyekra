@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { AppCollection, AppConfig, CollectionCondition, CollectionType } from '@/types/app-config';
-import { getAttributes, getTags } from '@/lib/admin-attributes';
+import { getAttributes, getTags } from '@/shared/utils/admin-attributes';
 
 const getSecret = () =>
   document.cookie.split('; ').find((c) => c.startsWith('admin_secret='))?.split('=')[1] || '';

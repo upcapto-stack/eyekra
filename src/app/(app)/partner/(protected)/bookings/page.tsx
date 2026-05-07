@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { PartnerShell } from '@/features/partner/components/PartnerShell';
+import { PartnerShell } from '@/modules/hrms/components/PartnerShell';
 
 type Booking = {
   id: string;
@@ -60,6 +60,9 @@ export default function PartnerBookingsPage() {
             <div className="mt-3 flex flex-wrap gap-2">
               <Link href={`/partner/bookings/${b.id}`} className="common-btn">
                 Open
+              </Link>
+              <Link href={`/partner/eye-test?bookingId=${encodeURIComponent(b.id)}`} className="common-btn common-btn--primary">
+                Eye test
               </Link>
               {!b.assignedPartnerId ? (
                 <button type="button" className="common-btn common-btn--primary" onClick={() => takeAction(b.id, 'accept')}>

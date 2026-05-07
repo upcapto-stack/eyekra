@@ -128,6 +128,14 @@ async function main() {
     });
   }
 
+  try {
+    const { main: seedCatalog } = require('./seed-catalog.cjs');
+    await seedCatalog();
+  } catch (e) {
+    // eslint-disable-next-line no-console
+    console.warn('Catalog seed skipped or failed:', e?.message || e);
+  }
+
   const bookings = readJson('bookings.json', []);
   for (const booking of bookings) {
     const user = await ensureUser({

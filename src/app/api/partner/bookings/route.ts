@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { BookingFieldStatus } from '@prisma/client';
-import { db } from '@/lib/db';
-import { requirePartnerUser } from '@/lib/server/partner/auth';
+import { db } from '@/core/api/db';
+import { requirePartnerUser } from '@/core/api/server/partner/auth';
 
 export async function GET(request: NextRequest) {
   const partner = await requirePartnerUser(request);

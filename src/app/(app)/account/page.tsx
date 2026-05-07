@@ -1,4 +1,4 @@
-import { AccountProfileView } from '@/features/account';
+import { AccountProfileView } from '@/modules/crm';
 
 export default function AccountPage() {
   return <AccountProfileView />;

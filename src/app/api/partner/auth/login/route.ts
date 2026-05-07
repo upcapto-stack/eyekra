@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { UserRole } from '@prisma/client';
-import { db } from '@/lib/db';
-import { createSession, sessionCookieValue } from '@/lib/server/session';
-import { limitRequest } from '@/lib/server/rate-limit';
+import { db } from '@/core/api/db';
+import { createSession, sessionCookieValue } from '@/core/api/server/session';
+import { limitRequest } from '@/core/api/server/rate-limit';
+import { resolvePartnerWarehouseAssignment, savePartnerWarehouseAssignment } from '@/core/api/server/partner/warehouse';
 
 function isPartnerRole(role: UserRole): boolean {
   return role === UserRole.STAFF || role === UserRole.ADMIN;
@@ -38,9 +39,13 @@ export async function POST(request: NextRequest) {
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
 
+    const assignment = await resolvePartnerWarehouseAssignment(user.id);
+    await savePartnerWarehouseAssignment(user.id, assignment);
+
     const token = await createSession(user.id);
     const response = NextResponse.json({
       user: { id: user.id, name: user.name, mobile: user.mobile, email: user.email, role: user.role },
+      warehouse: assignment,
     });
     response.headers.set('Set-Cookie', sessionCookieValue(token));
     return response;

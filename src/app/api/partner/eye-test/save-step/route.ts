@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { EyeTestStep } from '@prisma/client';
-import { db } from '@/lib/db';
-import { logPartnerAction } from '@/lib/server/partner/audit';
-import { requirePartnerUser } from '@/lib/server/partner/auth';
-import { eyeTestSaveStepSchema } from '@/lib/server/partner/validation';
+import { db } from '@/core/api/db';
+import { logPartnerAction } from '@/core/api/server/partner/audit';
+import { requirePartnerUser } from '@/core/api/server/partner/auth';
+import { eyeTestSaveStepSchema } from '@/core/api/server/partner/validation';
 
 function parseStep(step: string): EyeTestStep | null {
   const key = step.trim().toUpperCase().replace(/\s+/g, '_');

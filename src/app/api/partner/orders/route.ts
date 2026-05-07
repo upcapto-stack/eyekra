@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import { db } from '@/lib/db';
-import { createUserNotification } from '@/lib/server/notifications';
-import { logPartnerAction } from '@/lib/server/partner/audit';
-import { requirePartnerUser } from '@/lib/server/partner/auth';
-import { computeLedgerTotal } from '@/lib/server/partner/earnings';
-import { partnerOrderSchema } from '@/lib/server/partner/validation';
+import { db } from '@/core/api/db';
+import { createUserNotification } from '@/core/api/server/notifications';
+import { logPartnerAction } from '@/core/api/server/partner/audit';
+import { requirePartnerUser } from '@/core/api/server/partner/auth';
+import { computeLedgerTotal } from '@/core/api/server/partner/earnings';
+import { partnerOrderSchema } from '@/core/api/server/partner/validation';
 
 function generateOrderId() {
   return `ORD-${Date.now().toString(36)}-${randomUUID().slice(0, 4)}`.toUpperCase();

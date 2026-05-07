@@ -1,4 +1,4 @@
-import { MapLocationPickerView } from '@/features/home/components/MapLocationPickerView';
+import { MapLocationPickerView } from '@/modules/optical/components/MapLocationPickerView';
 
 export const dynamic = 'force-dynamic';
 

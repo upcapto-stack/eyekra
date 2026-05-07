@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OrderStatus } from '@prisma/client';
 import type { Order } from '@/types/order';
-import { db } from '@/lib/db';
-import { isStaffOrAdmin, requireSessionUser } from '@/lib/server/authz';
+import { db } from '@/core/api/db';
+import { isStaffOrAdmin, requireSessionUser } from '@/core/api/server/authz';
+import { createUserNotification, humanizeOrderStatus } from '@/core/api/server/notifications';
+import { getCentralWarehouseId } from '@/core/api/server/warehouse';
+import {
+  createOrderLines,
+  orderStatusRank,
+  releaseFramesForOrder,
+  releaseLensBlanksForOrder,
+  reserveFramesForOrder,
+  reserveLensBlanksForOrder,
+  shipOrderStock,
+} from '@/core/api/server/order-inventory';
 
 function generateOrderId(): string {
   const t = Date.now().toString(36);
@@ -117,23 +128,39 @@ export async function POST(request: NextRequest) {
       total: Number(body.total) || 0,
       offerApplied: body.offerApplied,
     };
-    await db.order.create({
-      data: {
-        id: order.id,
-        userId: user.id,
-        createdAt: new Date(order.createdAt),
-        status: toOrderStatus(order.status),
-        customerName: order.customer.name,
-        customerMobile: order.customer.mobile,
-        customerEmail: order.customer.email,
-        deliveryAddress: JSON.parse(JSON.stringify(order.deliveryAddress)),
-        items: JSON.parse(JSON.stringify(order.items)),
-        subtotal: order.subtotal,
-        discount: order.discount,
-        total: order.total,
-        offerApplied: order.offerApplied ?? null,
-      },
+    const centralId = await getCentralWarehouseId();
+    await db.$transaction(async (tx) => {
+      await tx.order.create({
+        data: {
+          id: order.id,
+          userId: user.id,
+          createdAt: new Date(order.createdAt),
+          status: toOrderStatus(order.status),
+          customerName: order.customer.name,
+          customerMobile: order.customer.mobile,
+          customerEmail: order.customer.email,
+          deliveryAddress: JSON.parse(JSON.stringify(order.deliveryAddress)),
+          items: JSON.parse(JSON.stringify(order.items)),
+          subtotal: order.subtotal,
+          discount: order.discount,
+          total: order.total,
+          offerApplied: order.offerApplied ?? null,
+        },
+      });
+      if (centralId) {
+        await createOrderLines(tx, order.id, order.items, centralId);
+        if (toOrderStatus(order.status) === OrderStatus.CONFIRMED) {
+          await reserveFramesForOrder(tx, centralId, order.id, user.id);
+        }
+      }
     });
+    await createUserNotification({
+      userId: user.id,
+      type: 'order_placed',
+      title: 'Order placed successfully',
+      message: `Your order ${order.id} has been placed.`,
+      data: { orderId: order.id, status: order.status },
+    }).catch(() => undefined);
     return NextResponse.json({ orderId: order.id, order });
   } catch (e) {
     console.error('Order place error', e);
@@ -159,11 +186,56 @@ export async function PATCH(request: NextRequest) {
         { status: 400 }
       );
     }
-    const updated = await db.order.update({
+    const existing = await db.order.findUnique({
       where: { id },
-      data: { status: toOrderStatus(status) },
-    }).catch(() => null);
+      select: { status: true, id: true, userId: true },
+    });
+    if (!existing) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    const oldStatus = existing.status;
+    const newStatus = toOrderStatus(status);
+    const centralId = await getCentralWarehouseId();
+
+    await db.$transaction(async (tx) => {
+      await tx.order.update({
+        where: { id },
+        data: { status: newStatus },
+      });
+      if (centralId) {
+        if (newStatus === OrderStatus.CONFIRMED && oldStatus === OrderStatus.PENDING) {
+          await reserveFramesForOrder(tx, centralId, id, user?.id ?? null);
+        }
+        if (newStatus === OrderStatus.IN_LAB && oldStatus !== OrderStatus.IN_LAB) {
+          await reserveLensBlanksForOrder(tx, centralId, id, user?.id ?? null);
+        }
+        if (newStatus === OrderStatus.CANCELLED) {
+          const rOld = orderStatusRank(oldStatus);
+          const rShip = orderStatusRank(OrderStatus.SHIPPED);
+          if (rOld < rShip) {
+            if (rOld >= orderStatusRank(OrderStatus.IN_LAB)) {
+              await releaseLensBlanksForOrder(tx, centralId, id, user?.id ?? null);
+            }
+            if (rOld >= orderStatusRank(OrderStatus.CONFIRMED)) {
+              await releaseFramesForOrder(tx, centralId, id, user?.id ?? null);
+            }
+          }
+        }
+        if (newStatus === OrderStatus.SHIPPED && oldStatus !== OrderStatus.SHIPPED) {
+          await shipOrderStock(tx, centralId, id, user?.id ?? null);
+        }
+      }
+    });
+
+    const updated = await db.order.findUnique({ where: { id } });
     if (!updated) return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    if (fromOrderStatus(oldStatus) !== status) {
+      await createUserNotification({
+        userId: updated.userId,
+        type: 'order_status',
+        title: `Order ${updated.id} is now ${humanizeOrderStatus(status)}`,
+        message: `Your order status has changed to ${humanizeOrderStatus(status)}.`,
+        data: { orderId: updated.id, status },
+      }).catch(() => undefined);
+    }
     return NextResponse.json({ order: mapOrder(updated) });
   } catch (e) {
     console.error('Order update error', e);

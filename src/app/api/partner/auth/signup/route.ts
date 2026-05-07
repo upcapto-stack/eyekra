@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import { UserRole } from '@prisma/client';
-import { db } from '@/lib/db';
-import { createSession, sessionCookieValue } from '@/lib/server/session';
-import { limitRequest } from '@/lib/server/rate-limit';
+import { db } from '@/core/api/db';
+import { createSession, sessionCookieValue } from '@/core/api/server/session';
+import { limitRequest } from '@/core/api/server/rate-limit';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 

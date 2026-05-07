@@ -38,7 +38,7 @@ Yeh document **frontend ke hisab se** likha gaya hai: har flow step-by-step, fro
   - `products` – frames list; agar missing/empty to frontend **mock products** use karta hai (16 items).  
   - `lenses` – lens options; agar missing/empty to frontend **built-in lens list** use karta hai.  
   - `attributes`, `tags` – admin forms ke liye.  
-  - `stats` – `{ orderCount?, customerCount?, totalRevenue? }` dashboard ke liye.  
+  - `stats` – `{ orderCount?, customerCount?, totalRevenue? }` dashboard ke liye; backend GET `/api/config` isey live DB aggregates se populate karta hai.  
 
 - **Error:** Agar 404/500 ya invalid JSON to frontend config = null set karta hai; products/lenses fallback se chal jate hain.  
 - **Logic:** Backend ko config DB/se storage se padh ke ek hi JSON object return karna hai; frontend **koi pagination nahi** karta, ek hi call mein sab leta hai.

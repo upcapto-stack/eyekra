@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { ProductDetailView } from '@/features/products/components/ProductDetailView';
+import { ProductDetailView } from '@/modules/optical/components/ProductDetailView';
 
 export default function ProductDetailPage() {
   const params = useParams();

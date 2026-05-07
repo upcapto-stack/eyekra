@@ -1,4 +1,4 @@
-import { WalletView } from '@/features/account/components/WalletView';
+import { WalletView } from '@/modules/crm/components/WalletView';
 
 export default function WalletPage() {
   return <WalletView />;

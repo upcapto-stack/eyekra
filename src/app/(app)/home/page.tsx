@@ -1,4 +1,4 @@
-import { HomeView } from '@/features/home';
+import { HomeView } from '@/modules/optical';
 
 export default function HomeRoute() {
   return <HomeView />;

@@ -16,6 +16,13 @@ build
 .env.test.local
 .env.production.local
 .env.vercel
+.env.*.vercel
+.env.production.vercel
+
+# Lighthouse audit artifacts
+lighthouse-*.json
+lighthouse-*.html
+lighthouse-all-pages/
 
 # TWA signing material (never commit)
 twa-android/android.keystore
