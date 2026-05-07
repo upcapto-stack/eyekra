@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { StockMovementType } from '@prisma/client';
 import { db } from '@/core/api/db';
 import { isStaffOrAdmin, requireSessionUser } from '@/core/api/server/authz';
 import { applyStockAdjustment } from '@/core/api/server/inventory';
@@ -9,6 +10,29 @@ async function gate(request: NextRequest) {
     return { user: null, res: NextResponse.json({ error: 'Unauthorized' }, { status: 401 }) };
   }
   return { user, res: null as NextResponse | null };
+}
+
+export async function GET(request: NextRequest) {
+  const { res } = await gate(request);
+  if (res) return res;
+  const movements = await db.stockMovement.findMany({
+    where: { type: StockMovementType.ADJUSTMENT },
+    orderBy: { createdAt: 'desc' },
+    take: 100,
+    include: {
+      warehouse: { select: { code: true, name: true } },
+      variant: {
+        select: {
+          sku: true,
+          colorName: true,
+          product: { select: { name: true } },
+        },
+      },
+      lensBlank: { select: { name: true, legacyLensId: true } },
+      createdBy: { select: { name: true, email: true } },
+    },
+  });
+  return NextResponse.json({ adjustments: movements });
 }
 
 export async function POST(request: NextRequest) {
