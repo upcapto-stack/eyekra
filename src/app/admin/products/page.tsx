@@ -388,6 +388,29 @@ export default function AdminProductsPage() {
     }
   };
 
+  const backfillUnits = async (productName: string, v: AdminVariant) => {
+    if (!confirm(`Generate QR labels for ${v.onHandQty} existing ${productName} • ${v.colorName} units? This pads tracked units up to your current on-hand count.`)) {
+      return;
+    }
+    setMsg('');
+    const r = await fetch('/api/admin/stock-units/backfill', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ variantId: v.id }),
+    });
+    const data = await r.json();
+    if (!r.ok) {
+      setMsg(data?.error ?? 'Backfill failed');
+      return;
+    }
+    if (data.created === 0) {
+      setMsg(data.message || 'Nothing to backfill — all units are already tracked.');
+    } else {
+      setMsg(`Created ${data.created} tracked units. Click "Units" to view & print QR labels.`);
+    }
+  };
+
   if (loading) return <p className="text-slate-500">Loading…</p>;
 
   const tops = getTopLevelCategories(config);
@@ -723,12 +746,27 @@ export default function AdminProductsPage() {
                                     />
                                   </td>
                                   <td className="px-3 py-2 text-right whitespace-nowrap">
+                                    <a
+                                      href={`/admin/stock-units?variantId=${encodeURIComponent(v.id)}`}
+                                      className="text-[#fe5001] hover:underline mr-2"
+                                      title="View per-piece tracked units (QR-tagged)"
+                                    >
+                                      Units
+                                    </a>
                                     <button
                                       type="button"
                                       onClick={() => openHistory(p.name, v)}
                                       className="text-[#fe5001] hover:underline mr-2"
                                     >
                                       History
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => backfillUnits(p.name, v)}
+                                      className="text-blue-600 dark:text-blue-400 hover:underline mr-2"
+                                      title="Generate QR labels for existing on-hand stock"
+                                    >
+                                      Backfill
                                     </button>
                                     <button
                                       type="button"

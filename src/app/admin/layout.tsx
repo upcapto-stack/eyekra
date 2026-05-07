@@ -178,6 +178,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           >
             Stock adjustments
           </Link>
+          <Link
+            href="/admin/stock-units"
+            className={`block px-3 py-2 rounded-lg text-sm font-medium ${
+              pathname.startsWith('/admin/stock-units') ? 'bg-[#fe5001]/10 text-[#fe5001]' : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
+            }`}
+          >
+            Stock units (per piece)
+          </Link>
           <p className="px-3 pt-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">Display</p>
           <Link
             href="/admin/banners"
