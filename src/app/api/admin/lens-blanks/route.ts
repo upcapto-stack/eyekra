@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { db } from '@/core/api/db';
 import { isStaffOrAdmin, requireSessionUser } from '@/core/api/server/authz';
-import { getCentralWarehouse } from '@/core/api/server/warehouse';
+import { aggregateInventory } from '@/core/api/server/inventory-aggregate';
 
 async function gate(request: NextRequest) {
   const user = await requireSessionUser(request);
@@ -15,16 +15,17 @@ async function gate(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const { res } = await gate(request);
   if (res) return res;
-  const central = await getCentralWarehouse();
   const blanks = await db.lensBlank.findMany({
     orderBy: { name: 'asc' },
     include: {
       category: true,
-      inventoryItems: central ? { where: { warehouseId: central.id }, take: 1 } : undefined,
+      inventoryItems: {
+        include: { warehouse: { select: { id: true, code: true, name: true } } },
+      },
     },
   });
   const mapped = blanks.map((lb) => {
-    const inv = lb.inventoryItems?.[0];
+    const agg = aggregateInventory(lb.inventoryItems);
     return {
       id: lb.id,
       categoryId: lb.categoryId,
@@ -50,10 +51,11 @@ export async function GET(request: NextRequest) {
       taxRate: Number(lb.taxRate),
       hsnCode: lb.hsnCode,
       isActive: lb.isActive,
-      onHandQty: inv?.onHandQty ?? 0,
-      reservedQty: inv?.reservedQty ?? 0,
-      availableQty: (inv?.onHandQty ?? 0) - (inv?.reservedQty ?? 0),
-      lowStock: inv != null && inv.onHandQty - inv.reservedQty <= inv.reorderPoint,
+      onHandQty: agg.onHand,
+      reservedQty: agg.reserved,
+      availableQty: agg.available,
+      lowStock: agg.lowStock,
+      inventoryByWarehouse: agg.byWarehouse,
     };
   });
   return NextResponse.json({ lensBlanks: mapped });
@@ -62,8 +64,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const { res } = await gate(request);
   if (res) return res;
-  const central = await getCentralWarehouse();
-  if (!central) return NextResponse.json({ error: 'CENTRAL warehouse missing' }, { status: 500 });
 
   const body = (await request.json()) as {
     categoryId: string;
@@ -117,14 +117,21 @@ export async function POST(request: NextRequest) {
       hsnCode: body.hsnCode?.trim() || '9004',
     },
   });
-  await db.inventoryItem.create({
-    data: {
-      warehouseId: central.id,
-      lensBlankId: lb.id,
-      onHandQty: 0,
-      reservedQty: 0,
-      reorderPoint: 5,
-    },
+  const warehouses = await db.warehouse.findMany({
+    where: { isActive: true },
+    select: { id: true },
   });
+  if (warehouses.length > 0) {
+    await db.inventoryItem.createMany({
+      data: warehouses.map((w) => ({
+        warehouseId: w.id,
+        lensBlankId: lb.id,
+        onHandQty: 0,
+        reservedQty: 0,
+        reorderPoint: 5,
+      })),
+      skipDuplicates: true,
+    });
+  }
   return NextResponse.json({ id: lb.id });
 }

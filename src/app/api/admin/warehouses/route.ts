@@ -53,5 +53,34 @@ export async function POST(request: NextRequest) {
       managerPhone: body.managerPhone?.trim() || null,
     },
   });
+
+  // Backfill zero-quantity inventory rows for every existing variant and lens
+  // blank so this warehouse shows up in dashboards alongside existing stock.
+  const [variants, lensBlanks] = await Promise.all([
+    db.productVariant.findMany({ select: { id: true, reorderPoint: true } }),
+    db.lensBlank.findMany({ select: { id: true } }),
+  ]);
+  const rows = [
+    ...variants.map((v) => ({
+      warehouseId: w.id,
+      variantId: v.id,
+      lensBlankId: null,
+      onHandQty: 0,
+      reservedQty: 0,
+      reorderPoint: v.reorderPoint,
+    })),
+    ...lensBlanks.map((lb) => ({
+      warehouseId: w.id,
+      variantId: null,
+      lensBlankId: lb.id,
+      onHandQty: 0,
+      reservedQty: 0,
+      reorderPoint: 5,
+    })),
+  ];
+  if (rows.length > 0) {
+    await db.inventoryItem.createMany({ data: rows, skipDuplicates: true });
+  }
+
   return NextResponse.json({ id: w.id });
 }

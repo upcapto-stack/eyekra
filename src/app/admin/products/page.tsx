@@ -3,6 +3,16 @@
 import { Fragment, useCallback, useEffect, useState } from 'react';
 import type { AppConfig, AppCategory } from '@/types/app-config';
 
+type WarehouseStock = {
+  warehouseId?: string;
+  code: string;
+  name: string;
+  onHand: number;
+  reserved: number;
+  available: number;
+  reorderPoint: number;
+};
+
 type AdminVariant = {
   id: string;
   sku: string;
@@ -20,6 +30,7 @@ type AdminVariant = {
   reservedQty: number;
   availableQty: number;
   lowStock?: boolean;
+  inventoryByWarehouse?: WarehouseStock[];
 };
 
 type AdminProduct = {
@@ -317,26 +328,44 @@ export default function AdminProductsPage() {
                           </tr>
                         </thead>
                         <tbody>
-                          {p.variants.map((v) => (
-                            <tr key={v.id} className={v.lowStock ? 'text-amber-700 dark:text-amber-300' : ''}>
-                              <td className="font-mono py-1 pr-2">{v.sku}</td>
-                              <td>{v.colorName}</td>
-                              <td>{v.costPrice != null ? `₹${v.costPrice}` : '—'}</td>
-                              <td>₹{v.mrp}</td>
-                              <td>₹{v.sellingPrice}</td>
-                              <td>{v.onHandQty}</td>
-                              <td>{v.reservedQty}</td>
-                              <td>{v.availableQty}</td>
-                              <td>
-                                <input
-                                  type="number"
-                                  className="w-14 border rounded px-1 dark:bg-slate-900"
-                                  defaultValue={v.reorderPoint}
-                                  onBlur={(e) => patchVariant(p.id, v, { reorderPoint: Number(e.target.value) })}
-                                />
-                              </td>
-                            </tr>
-                          ))}
+                          {p.variants.map((v) => {
+                            const breakdown = v.inventoryByWarehouse ?? [];
+                            const splitTooltip =
+                              breakdown.length > 0
+                                ? breakdown
+                                    .map((b) => `${b.code}: ${b.onHand} on hand, ${b.reserved} reserved`)
+                                    .join('\n')
+                                : 'No warehouse rows yet';
+                            return (
+                              <tr key={v.id} className={v.lowStock ? 'text-amber-700 dark:text-amber-300' : ''}>
+                                <td className="font-mono py-1 pr-2">{v.sku}</td>
+                                <td>{v.colorName}</td>
+                                <td>{v.costPrice != null ? `₹${v.costPrice}` : '—'}</td>
+                                <td>₹{v.mrp}</td>
+                                <td>₹{v.sellingPrice}</td>
+                                <td>
+                                  <span title={splitTooltip} className="cursor-help underline decoration-dotted">
+                                    {v.onHandQty}
+                                  </span>
+                                  {breakdown.length > 1 && (
+                                    <span className="ml-1 text-[10px] text-slate-400">
+                                      ({breakdown.length}×WH)
+                                    </span>
+                                  )}
+                                </td>
+                                <td>{v.reservedQty}</td>
+                                <td>{v.availableQty}</td>
+                                <td>
+                                  <input
+                                    type="number"
+                                    className="w-14 border rounded px-1 dark:bg-slate-900"
+                                    defaultValue={v.reorderPoint}
+                                    onBlur={(e) => patchVariant(p.id, v, { reorderPoint: Number(e.target.value) })}
+                                  />
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </td>

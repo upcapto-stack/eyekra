@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/core/api/db';
 import { isAdmin, isStaffOrAdmin, requireSessionUser } from '@/core/api/server/authz';
-import { getCentralWarehouse } from '@/core/api/server/warehouse';
+import { aggregateInventory } from '@/core/api/server/inventory-aggregate';
 
 async function requireAdminCatalogUser(request: NextRequest) {
   const user = await requireSessionUser(request);
@@ -11,27 +11,27 @@ async function requireAdminCatalogUser(request: NextRequest) {
   return { user, error: null as NextResponse | null };
 }
 
-
 export async function GET(request: NextRequest) {
   const { user, error } = await requireAdminCatalogUser(request);
   if (error || !user) return error!;
-  const central = await getCentralWarehouse();
   const products = await db.product.findMany({
     orderBy: { updatedAt: 'desc' },
     include: {
       variants: {
         orderBy: { sku: 'asc' },
         include: {
-          inventoryItems: { take: 8 },
+          inventoryItems: {
+            include: {
+              warehouse: { select: { id: true, code: true, name: true } },
+            },
+          },
         },
       },
     },
   });
   const mapped = products.map((p) => {
     const variants = p.variants.map((v) => {
-      const inv = central
-        ? v.inventoryItems.find((i) => i.warehouseId === central.id)
-        : v.inventoryItems[0];
+      const agg = aggregateInventory(v.inventoryItems);
       const row: Record<string, unknown> = {
         id: v.id,
         sku: v.sku,
@@ -46,10 +46,11 @@ export async function GET(request: NextRequest) {
         weightG: v.weightG != null ? Number(v.weightG) : null,
         reorderPoint: v.reorderPoint,
         isActive: v.isActive,
-        onHandQty: inv?.onHandQty ?? 0,
-        reservedQty: inv?.reservedQty ?? 0,
-        availableQty: (inv?.onHandQty ?? 0) - (inv?.reservedQty ?? 0),
-        lowStock: inv != null && inv.onHandQty - inv.reservedQty <= inv.reorderPoint,
+        onHandQty: agg.onHand,
+        reservedQty: agg.reserved,
+        availableQty: agg.available,
+        lowStock: agg.lowStock,
+        inventoryByWarehouse: agg.byWarehouse,
       };
       if (isAdmin(user.role)) row.costPrice = Number(v.costPrice);
       return row;
@@ -103,10 +104,6 @@ export async function POST(request: NextRequest) {
     };
     if (!body?.catalogSlug?.trim() || !body?.name?.trim() || !body?.categoryId || !body?.shape) {
       return NextResponse.json({ error: 'catalogSlug, name, categoryId, shape required' }, { status: 400 });
-    }
-    const central = await getCentralWarehouse();
-    if (!central) {
-      return NextResponse.json({ error: 'CENTRAL warehouse missing. Run DB seed.' }, { status: 500 });
     }
     const product = await db.product.create({
       data: {

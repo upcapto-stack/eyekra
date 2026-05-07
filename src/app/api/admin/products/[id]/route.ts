@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/core/api/db';
 import { isAdmin, isStaffOrAdmin, requireSessionUser } from '@/core/api/server/authz';
-import { getCentralWarehouse } from '@/core/api/server/warehouse';
+import { aggregateInventory } from '@/core/api/server/inventory-aggregate';
 
 async function gate(request: NextRequest) {
   const user = await requireSessionUser(request);
@@ -15,23 +15,24 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
   const { user, res } = await gate(request);
   if (!user) return res!;
   const { id } = await ctx.params;
-  const central = await getCentralWarehouse();
   const product = await db.product.findFirst({
     where: { OR: [{ id }, { catalogSlug: id }] },
     include: {
       variants: {
         orderBy: { sku: 'asc' },
         include: {
-          inventoryItems: { take: 8 },
+          inventoryItems: {
+            include: {
+              warehouse: { select: { id: true, code: true, name: true } },
+            },
+          },
         },
       },
     },
   });
   if (!product) return NextResponse.json({ error: 'Not found' }, { status: 404 });
   const variants = product.variants.map((v) => {
-    const inv = central
-      ? v.inventoryItems.find((i) => i.warehouseId === central.id)
-      : v.inventoryItems[0];
+    const agg = aggregateInventory(v.inventoryItems);
     const base = {
       id: v.id,
       sku: v.sku,
@@ -47,10 +48,11 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
       weightG: v.weightG != null ? Number(v.weightG) : null,
       reorderPoint: v.reorderPoint,
       isActive: v.isActive,
-      onHandQty: inv?.onHandQty ?? 0,
-      reservedQty: inv?.reservedQty ?? 0,
-      availableQty: (inv?.onHandQty ?? 0) - (inv?.reservedQty ?? 0),
-      lowStock: inv != null && inv.onHandQty - inv.reservedQty <= inv.reorderPoint,
+      onHandQty: agg.onHand,
+      reservedQty: agg.reserved,
+      availableQty: agg.available,
+      lowStock: agg.lowStock,
+      inventoryByWarehouse: agg.byWarehouse,
     };
     if (!isAdmin(user.role)) {
       const { costPrice: _c, ...rest } = base;

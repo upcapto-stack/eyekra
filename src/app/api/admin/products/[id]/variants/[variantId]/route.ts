@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ProductVariantDisplayType } from '@prisma/client';
 import { db } from '@/core/api/db';
 import { isStaffOrAdmin, requireSessionUser } from '@/core/api/server/authz';
-import { getCentralWarehouse } from '@/core/api/server/warehouse';
 
 async function gate(request: NextRequest) {
   const user = await requireSessionUser(request);
@@ -49,13 +48,10 @@ export async function PATCH(request: NextRequest, ctx: { params: Promise<{ id: s
   await db.productVariant.update({ where: { id: variant.id }, data: data as object });
 
   if (body.reorderPoint != null) {
-    const central = await getCentralWarehouse();
-    if (central) {
-      await db.inventoryItem.updateMany({
-        where: { variantId: variant.id, warehouseId: central.id },
-        data: { reorderPoint: Number(body.reorderPoint) },
-      });
-    }
+    await db.inventoryItem.updateMany({
+      where: { variantId: variant.id },
+      data: { reorderPoint: Number(body.reorderPoint) },
+    });
   }
 
   return NextResponse.json({ ok: true });

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ProductVariantDisplayType } from '@prisma/client';
 import { db } from '@/core/api/db';
 import { isStaffOrAdmin, requireSessionUser } from '@/core/api/server/authz';
-import { getCentralWarehouse } from '@/core/api/server/warehouse';
+import { aggregateInventory } from '@/core/api/server/inventory-aggregate';
 
 async function gate(request: NextRequest) {
   const user = await requireSessionUser(request);
@@ -26,9 +26,24 @@ export async function GET(request: NextRequest, ctx: { params: Promise<{ id: str
   const variants = await db.productVariant.findMany({
     where: { productId },
     orderBy: { sku: 'asc' },
-    include: { inventoryItems: { take: 8 } },
+    include: {
+      inventoryItems: {
+        include: { warehouse: { select: { id: true, code: true, name: true } } },
+      },
+    },
   });
-  return NextResponse.json({ variants });
+  const mapped = variants.map((v) => {
+    const agg = aggregateInventory(v.inventoryItems);
+    return {
+      ...v,
+      onHandQty: agg.onHand,
+      reservedQty: agg.reserved,
+      availableQty: agg.available,
+      lowStock: agg.lowStock,
+      inventoryByWarehouse: agg.byWarehouse,
+    };
+  });
+  return NextResponse.json({ variants: mapped });
 }
 
 export async function POST(request: NextRequest, ctx: { params: Promise<{ id: string }> }) {
@@ -37,8 +52,6 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
   const { id } = await ctx.params;
   const productId = await resolveProductId(id);
   if (!productId) return NextResponse.json({ error: 'Product not found' }, { status: 404 });
-  const central = await getCentralWarehouse();
-  if (!central) return NextResponse.json({ error: 'CENTRAL warehouse missing' }, { status: 500 });
 
   const body = (await request.json()) as {
     sku: string;
@@ -82,14 +95,24 @@ export async function POST(request: NextRequest, ctx: { params: Promise<{ id: st
       reorderPoint: body.reorderPoint ?? 5,
     },
   });
-  await db.inventoryItem.create({
-    data: {
-      warehouseId: central.id,
-      variantId: variant.id,
-      onHandQty: 0,
-      reservedQty: 0,
-      reorderPoint: variant.reorderPoint,
-    },
+
+  // Pre-create zero-quantity inventory rows in every active warehouse so the
+  // dashboards and listings show the SKU immediately, even before any GRN.
+  const warehouses = await db.warehouse.findMany({
+    where: { isActive: true },
+    select: { id: true },
   });
+  if (warehouses.length > 0) {
+    await db.inventoryItem.createMany({
+      data: warehouses.map((w) => ({
+        warehouseId: w.id,
+        variantId: variant.id,
+        onHandQty: 0,
+        reservedQty: 0,
+        reorderPoint: variant.reorderPoint,
+      })),
+      skipDuplicates: true,
+    });
+  }
   return NextResponse.json({ variantId: variant.id });
 }
